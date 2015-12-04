@@ -1,8 +1,10 @@
-from wtforms import Form, StringField, IntegerField, validators
+from wtforms import Form, StringField, IntegerField, FloatField, validators
 import wtforms_json
 wtforms_json.init()
 
 
-class ProductForm(Form):
+class ItemForm(Form):
     title = StringField(validators=[validators.required()])
+    shop_name = StringField()
+    price = FloatField()
     count = IntegerField()

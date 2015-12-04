@@ -2,16 +2,19 @@
 import json
 from flask import request
 from fridge.app import app, state
-from fridge.forms import ProductForm
+from fridge.forms import ItemForm
+from fridge.models import Item, ItemController
 from product.find import Items
 
 
 @app.route('/cart/items', methods=['POST'])
 def cart_items():
     data = json.loads(request.data)
-    form = ProductForm.from_json(data)
+    form = ItemForm.from_json(data)
     if form.validate():
         print 'creating product'
+        item = Item(**form.data)
+        item.save()
         return json.dumps({}), 200, {'Content-Type': 'application/json; charset=utf-8'}
     else:
         return json.dumps({'error': 'can not add product'}), 400, {'Content-Type': 'application/json; charset=utf-8'}
@@ -29,30 +32,30 @@ def cart_items_list():
             "storeItems": [
                 {
                     "storeId": "storeId",
-                    "storeName": "Утконос",
+                    "storeName": u"Утконос",
                     "price_list": [
                         {
                             "@type": "PriceListPosition",
                             "id": "unique_item_id_1",
                             "price": 20000.0,
                             "img": "milk.png",
-                            "description": "Отличное молоко от альпийских коров.",
+                            "description": u"Отличное молоко от альпийских коров.",
                             "count": 3,
                             "currency":
                                 {
                                     "@type": "CurrencyObject",
                                     "name": "RUR",
-                                    "readable_name": "Российский рубль",
+                                    "readable_name": u"Российский рубль",
                                     "minor_units": 100
                                 },
-                            "short_description": "Супер-альп молоко. 1л."
+                            "short_description": u"Супер-альп молоко. 1л."
                         },
                         {
                             "@type": "PriceListPosition",
                             "id": "unique_item_id_2",
                             "price": 10000.0,
                             "img": "sosison.png",
-                            "description": "Сосисоны супер просто. Покупайте много!",
+                            "description": u"Сосисоны супер просто. Покупайте много!",
                             "count": 1,
                             "currency":
                                 {
@@ -61,58 +64,20 @@ def cart_items_list():
                                     "readable_name": "Российский рубль",
                                     "minor_units": 100
                                 },
-                            "short_description": "Сосисоны. 10шт."
+                            "short_description": u"Сосисоны. 10шт."
                         }
                     ]
                 },
                 {
                     "storeId": "storeId",
-                    "storeName": "Утконос",
+                    "storeName": u"Утконос",
                     "price_list": []
                 }
             ]
         }), 200, {'Content-Type': 'application/json; charset=utf-8'}
     else:
-        return json.dumps({
-            "@type": "ProductListCardObject",
-            "id": "unique_id_1234",
-            "type": "product_list_raw",
-            "score": 100500,
-            "price_list": [
-                {
-                    "@type": "PriceListPosition",
-                    "id": "unique_item_id_1",
-                    "price": 20000.0,
-                    "img": "milk.png",
-                    "description": "Отличное молоко от альпийских коров.",
-                    "count": 3,
-                    "currency":
-                        {
-                            "@type": "CurrencyObject",
-                            "name": "RUR",
-                            "readable_name": "Российский рубль",
-                            "minor_units": 100
-                        },
-                    "short_description": "Супер-альп молоко. 1л."
-                },
-                {
-                    "@type": "PriceListPosition",
-                    "id": "unique_item_id_2",
-                    "price": 10000.0,
-                    "img": "sosison.png",
-                    "description": "Сосисоны супер просто. Покупайте много!",
-                    "count": 1,
-                    "currency":
-                        {
-                            "@type": "CurrencyObject",
-                            "name": "RUR",
-                            "readable_name": "Российский рубль",
-                            "minor_units": 100
-                        },
-                    "short_description": "Сосисоны. 10шт."
-                }
-            ]
-        }), 200, {'Content-Type': 'application/json; charset=utf-8'}
+        items = Item.objects
+        return json.dumps(ItemController.items_as_ios(items)), 200, {'Content-Type': 'application/json; charset=utf-8'}
 
 
 @app.route('/cart/item/<string:item_id>', methods=['GET', 'DELETE'])
