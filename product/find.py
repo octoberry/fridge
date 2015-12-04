@@ -89,10 +89,13 @@ class Question(object):
 
     def GetItems(self, State):
         items = self.Answers.keys()
-        if u'Дальше' in items:
-            items = filter(lambda x: x != u'Дальше', items)
-            items.append(u'Дальше')
+        if 'Дальше' in items:
+            items = filter(lambda x: x != 'Дальше', items)
+            items.append('Дальше')
         return items
+
+    def Check(self, State):
+        return True
 
     def Ask(self, State):
         return self.Q, self.GetItems(State)
@@ -115,7 +118,7 @@ class Question(object):
                 return self.Any
 
 
-class QuesitonSelectFew(object):
+class QuesitonSelectFew(Question):
 
     def __init__(self, Q, Targets, Answers, FuncAction, Any=None, saveTo='item'):
         self.Q = Q
@@ -133,6 +136,9 @@ class QuesitonSelectFew(object):
         result = sorted(result, key=lambda x: abs(self.Answers[x][self.Targets['sort']] - State['price']) + 10000 * (x == u'Дальше'))
         result = map(lambda x: x + u', цена: ' + str(self.Answers[x]['price']), result)
         return result
+
+    def Check(self, State):
+        return len(self.getItems()) < 5
 
     def Ask(self, State):
         return self.Q, self.getItems(State)
@@ -197,10 +203,12 @@ class State(object):
 
 class TItem(object):
 
-    def __init__(self, Name, Questions, FirstQuestion):
+    def __init__(self, Name, Questions, FirstQuestion, CheckQuestion=None, GotoQuestion=None):
         self.FirstQuestion = FirstQuestion
         self.Questions = Questions
         self.Name = Name
+        self.CheckQuestion = CheckQuestion
+        self.GotoQuestion = GotoQuestion
 
     def doFirst(self):
         State = {'CurrentQuestion': self.FirstQuestion}
@@ -213,6 +221,11 @@ class TItem(object):
             action.update(State)
         if 'end' in State and State['end']:
             return None, (State['item'], State.get('count', 1), State['price']), None
+        if self.CheckQuestion and self.CheckQuestion in self.Questions and not self.Questions[self.CheckQuestion].Check(State):
+            if self.GotoQuestion:
+                State['CurrentQuestion'] = self.GotoQuestion
+            else:
+                State['CurrentQuestion'] = self.CheckQuestion
         q, items = self.Questions[State['CurrentQuestion']].Ask(State)
         return q, items, State
 
@@ -281,7 +294,7 @@ class TItemFromNet(TItem):
             item_params[cat] = Question(u"Выберете " + cat, answers)
 
 
-        self.item = TItem(u"", item_params, first)
+        self.item = TItem(u"", item_params, first, 'ApproxPrice', 'SelectFew')
         self.urls = set([d[name2id['link']] for d in self.data if d[name2id[cat]] is not None])
         self.targets = set([d[name2id[target]] for d in self.data if d[name2id[target]] is not None])
 
