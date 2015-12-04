@@ -456,4 +456,13 @@ def GetBeerList():
             build('Hougarden 3% 0.5л', 70, "azbuka")]
 
 
+def GetQuery(query):
+    words = re.findall(ur'(?u)\w+', query.lower())
+    if any([u'пиво' in word  for word in words]):
+        return GetBeerList()
+    if any([u'сосиск' in word  for word in words]):
+        return GetSosigeList()
+    if any([u'пиво' in word  for word in words]):
+        return GetMilkList()
+
 Items = TItems([Beer, Sosige, Naggets, Milk], [ALCO])
