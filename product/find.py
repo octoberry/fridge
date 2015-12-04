@@ -9,6 +9,11 @@ import pymorphy2
 
 morph = pymorphy2.MorphAnalyzer()
 
+def morphy_word(word):
+    word = morph.parse(word)
+    if word and len(word) and word[0] and word[0].normal_form:
+        word = word[0].normal_form
+
 def get_html(url):
     headers = {'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36'}
     req = urllib2.Request(url, None, headers)
@@ -302,11 +307,8 @@ class TItems(object):
         result = []
         words = re.findall(ur'(?u)\w+', query)
         for word in words:
-            word = morph.parse(word)
-            if word and len(word) and word[0] and word[0].normal_form:
-                word = word[0].normal_form
-
-            if word.lower() in map(lambda x: x.lower(), self.items):
+            word = morphy_word(word)
+            if word.lower() in map(lambda x: morphy_word(x.lower()), self.items):
                 result.append(word)
                 continue
             if self.doNotExactSearch(word) is not None:
@@ -321,7 +323,7 @@ class TItems(object):
         words = words[1:]
         State['words'] = words
         if word.lower() in map(lambda x: x.lower(), self.items):
-            word = dict(map(lambda x: (x.lower(), x), self.items))[word.lower()]
+            word = dict(map(lambda x: (morphy_word(x.lower()), x), self.items))[word.lower()]
             q, items, State['State'] = self.items[word].doFirst()
             State['Current'] = word
             State['notExact'] = 1
@@ -409,12 +411,12 @@ Beer = TItem(u"Пиво",
                     u'Жигули b 9%': CreateBeer("butilka", "white", 20)},
                                              GotoQuestion("HowMany"), saveTo='item')}, "BeerType")
 
-Sosige = TItem(u"Сосиски",
+Sosige = TItem(u"Сосиска",
              {'Usual': Question(u"Как обычно?",
                                 {u"Да": AddItem(item=u"Сосиски Клинские 300 грамм", price='130'),
                                  u"Нет": AddItem(item=u"Сосиски НеКлинские не любимые 300 грамм", price='70')})}, 'Usual')
 
-Naggets = TItem(u"Наггетсы",
+Naggets = TItem(u"Наггетс",
              {'Usual': Question(u"Как обычно?",
                                 {u"Да": AddItem(item=u"Наггетсы c сыром Клинские 300 грамм", price='130'),
                                  u"Нет": AddItem(item=u"Наггетсы НеКлинские не любимые 300 грамм", price='70')})}, 'Usual')
