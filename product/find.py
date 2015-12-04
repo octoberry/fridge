@@ -7,17 +7,16 @@ import urllib2
 
 
 def get_html(url):
-    headers = { 'user-agent' :
-'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36'}
+    headers = {'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36'}
     req = urllib2.Request(url, None, headers)
     html = urllib2.urlopen(req).read()
     return html
 
 
 def google_utkonos(request):
-    url = "http://www.google.com/search?q=" + request + "+site:utkonos.ru";
+    url = "http://www.google.com/search?q=" + request + "+site:utkonos.ru"
     result = get_html(url).split('<a href="/url?q=')
-    return [result[i].split('&')[0] for i in list(range(1,6))]
+    return [result[i].split('&')[0] for i in list(range(1, 6))]
 
 
 class Action(object):
@@ -81,9 +80,9 @@ class Question(object):
 
     def GetItems(self, State):
         items = self.Answers.keys()
-        if 'Дальше' in items:
-            items = filter(lambda x: x != 'Дальше', items)
-            items.append('Дальше')
+        if u'Дальше' in items:
+            items = filter(lambda x: x != u'Дальше', items)
+            items.append(u'Дальше')
         return items
 
     def Ask(self, State):
@@ -122,8 +121,7 @@ class QuesitonSelectFew(object):
         for answer, values in self.Answers.iteritems():
             if all([State[k] == values[k] for k in self.Targets['select'] if k in State and k in values]):
                 result.append(answer)
-        result = sorted(result, key=lambda x: abs(self.Answers[x][self.Targets['sort']] -
-            State['price']) + 10000 * (x == u'Дальше'))
+        result = sorted(result, key=lambda x: abs(self.Answers[x][self.Targets['sort']] - State['price']) + 10000 * (x == u'Дальше'))
         result = map(lambda x: x + u', цена: ' + str(self.Answers[x]['price']), result)
         return result
 
@@ -248,9 +246,9 @@ class TItemFromNet(TItem):
         categories = filter(lambda x: x != price, categories)
 
         item_params = {'HowMany': QuestionCount(u"Сколько?", 'count', lambda x: AddItemWithCount(**x)),
-                      'ApproxPrice': QuestionCount(u"Приблизительная цена?", 'price', lambda x: GotoQuestion('SelectFew', **x)),
-                      'SelectFew': QuesitonSelectFew(u"Сделайте выбор!", {'select': categories, 'sort': 'price'},
-                          tovars, GotoQuestion("HowMany"), saveTo='item') }
+                       'ApproxPrice': QuestionCount(u"Приблизительная цена?", 'price', lambda x: GotoQuestion('SelectFew', **x)),
+                       'SelectFew': QuesitonSelectFew(u"Сделайте выбор!", {'select': categories,
+                           'sort': 'price'}, tovars, GotoQuestion("HowMany"), saveTo='item')}
 
         first = categories[0]
 
@@ -287,7 +285,7 @@ class TItems(object):
         saved = -1
         for index, hi in enumerate(self.hard_items):
             tmp = hi.Match(query)
-            if tmp > saved:
+            if tmp > saved and saved > 1:
                 saved = tmp
                 saved_index = index
         if saved_index != -1:
@@ -301,7 +299,8 @@ class TItems(object):
         word = words[0]
         words = words[1:]
         State['words'] = words
-        if word in self.items:
+        if word.lower() in map(lambda x: x.lower(), self.items):
+            word = dict(map(lambda x: (x.lower(), x), self.items))[word.lower()]
             q, items, State['State'] = self.items[word].doFirst()
             State['Current'] = word
             State['notExact'] = 1
