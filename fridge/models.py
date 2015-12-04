@@ -7,6 +7,7 @@ class Item(Document):
     shop_name = StringField()
     price = FloatField()
     count = IntField()
+    state = StringField(default="{}")
 
     def __init__(self, *args, **values):
         self._id = None

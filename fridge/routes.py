@@ -3,7 +3,7 @@ import json
 
 from bson import ObjectId
 from flask import request
-from fridge.app import app, state
+from fridge.app import app
 from fridge.forms import ItemForm
 from fridge.models import Item, ItemController
 from product.find import Items
@@ -101,9 +101,11 @@ def cart_item_del(item_id):
 
 @app.route('/cart/item/<string:item_id>/define', methods=['GET'])
 def cart_item_define(item_id):
-    title = request.args.get('title')
-    # item = Item.objects.get(id=ObjectId(item_id))
-
-    q, items, s = Items.do(title, state.get_state())
-    state.set_state(s)
-    return "%s, %s" % (q, items), 200
+    title = request.args.get('title', None)
+    item = Item.objects.get(id=ObjectId(item_id))
+    if title is None:
+        title = item.title
+    q, a, s = Items.do(title, json.loads(item.state))
+    item.state = json.dumps(s)
+    item.save()
+    return json.dumps({'question': q, 'answers': a}), 200, {'Content-Type': 'application/json; charset=utf-8'}
