@@ -439,4 +439,21 @@ def Print(All):
         print u"Добавили товар", All[1][0], u"в количестве", All[1][1]
 
 
+def build(name, price, magaz):
+    return {"name": name, 'price': price, 'magaz': magaz}
+
+
+def GetSosigeList():
+    return [build(u"Сосиски Клинские 300 грамм", 130, "utkonos"), build(u"Сосиски Молочные 300 грамм", 180, "utkonos"), build(u"Сосиски Докторские 250г", 310, "azbuka")]
+
+
+def GetMilkList():
+    return [build(u'Ясный луч 3.2% 1л', 80, "utkonos"), build(u'Простоквашно 3,4-4,5%', 300, "azbuka"), build(u'Домик в деревне', 80, "utkonos"), build(u'Самое лучше молоко', 310, "azbuka")]
+
+
+def GetBeerList():
+    return [build('Жигули 3% 0.5л', 80, "utkonos"), build('Балтика 3% 0.5л', 30, "utkonos"),
+            build('Hougarden 3% 0.5л', 70, "azbuka")]
+
+
 Items = TItems([Beer, Sosige, Naggets, Milk], [ALCO])
