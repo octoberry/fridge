@@ -13,3 +13,5 @@ validators==0.9
 Werkzeug==0.11.2
 WTForms==2.0.2
 WTForms-JSON==0.2.10
+pymorphy2==0.8
+pymorphy2-dicts==2.4.393442.3710985
