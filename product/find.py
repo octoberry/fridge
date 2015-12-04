@@ -73,7 +73,7 @@ class Answer(object):
 
 class Question(object):
 
-    def __init__(self, Q, Answers, Any=None):
+    def __init__(self, Q, Answers, Any=DefaultAction()):
         self.Q = Q
         self.Answers = Answers
         self.Any = Any or DefaultAction()
@@ -91,7 +91,7 @@ class Question(object):
     def WhatNext(self, answer, State):
         if answer.lower() in set(map(lambda x: x.lower(), self.GetItems(State))):
             arr = [k for k in self.Answers.iterkeys() if k.lower() == answer.lower()]
-            self.Answers[arr[0]]
+            return self.Answers[arr[0]]
         else:
             digit = -1
             try:
@@ -174,7 +174,7 @@ class QuestionCount(Question):
             digit = int(answer)
         except Exception:
             pass
-        if digit:
+        if digit != -1:
             return self.func({self.field: digit})
         else:
             return self.Any
@@ -200,7 +200,8 @@ class TItem(object):
 
     def do(self, answer, State):
         action = self.Questions[State['CurrentQuestion']].WhatNext(answer, State)
-        action.update(State)
+        if action:
+            action.update(State)
         if 'end' in State and State['end']:
             return None, (State['item'], State.get('count', 1), State['price']), None
         q, items = self.Questions[State['CurrentQuestion']].Ask(State)
