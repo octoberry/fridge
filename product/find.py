@@ -46,10 +46,10 @@ class Answer(object):
 
 
 class Question(object):
-    def __init__(self, Q, Answers, Any=DefaultAction()):
+    def __init__(self, Q, Answers, Any=None):
         self.Q = Q
         self.Answers = Answers
-        self.Any = Any
+        self.Any = Any or DefaultAction()
 
     def Ask(self, State):
         return self.Q, self.Answers.keys()
@@ -72,12 +72,12 @@ class Question(object):
 
 
 class QuesitonSelectFew(object):
-    def __init__(self, Q, Answers, FuncAction, Any=DefaultAction(), saveTo='item'):
+    def __init__(self, Q, Answers, FuncAction, Any=None, saveTo='item'):
         self.Q = Q
         self.Answers = Answers
-        self.Any = Any
+        self.Any = Any or DefaultAction()
         self.FuncAction = FuncAction
-        self.saveTo = 'item'
+        self.saveTo = saveTo
 
     def getItems(self, State):
         result = []
@@ -110,9 +110,9 @@ class QuesitonSelectFew(object):
 
 
 class QuestionCount(Question):
-    def __init__(self, Q, Any=DefaultAction()):
+    def __init__(self, Q, Any=None):
         self.Q = Q
-        self.Any = Any
+        self.Any = Any or DefaultAction()
 
     def Ask(self, State):
         return self.Q, []
