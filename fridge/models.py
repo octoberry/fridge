@@ -1,4 +1,6 @@
 # coding=utf-8
+from collections import defaultdict
+
 from mongoengine import Document, StringField, FloatField, IntField
 
 
@@ -7,6 +9,7 @@ class Item(Document):
     shop_name = StringField()
     price = FloatField()
     count = IntField()
+    magaz = StringField()
     state = StringField(default="{}")
 
     def __init__(self, *args, **values):
@@ -34,7 +37,7 @@ class ItemController(object):
             {
                 "@type": "PriceListPosition",
                 "id": str(item.id),
-                "price": item.price,
+                "price": item.price * 100,
                 # "img": "milk.png",
                 "description": item.shop_name,
                 "shop_name": item.shop_name,
@@ -49,11 +52,62 @@ class ItemController(object):
                 "short_description": item.title,
                 "title": item.title
             } for item in items
-        ]
+            ]
         return {
             "@type": "ProductListCardObject",
             "id": "unique_id_1234",
             "type": "product_list_raw",
             "score": 100500,
             "price_list": price_list
+        }
+
+
+class ItemShopController(object):
+    @staticmethod
+    def items_as_dict(items):
+        item_by_shop = defaultdict(list)
+        for item in items:
+            item_by_shop[item.magaz].append(item)
+        return item_by_shop
+
+    @staticmethod
+    def items_as_ios(items):
+        storeItems = []
+        items = filter(lambda x: x.magaz is not None, items)
+        if len(items) > 0:
+            item_by_shop = defaultdict(list)
+            for item in items:
+                item_by_shop[item.magaz].append(item)
+            for shop in item_by_shop.keys():
+                price_list = []
+                for item in item_by_shop[shop]:
+                    price_list.append({
+                        "@type": "PriceListPosition",
+                        "id": str(item.id),
+                        "price": item.price * 100,
+                        # "img": "milk.png",
+                        "description": item.shop_name,
+                        "shop_name": item.shop_name,
+                        "count": item.count,
+                        "currency":
+                            {
+                                "@type": "CurrencyObject",
+                                "name": "RUR",
+                                "readable_name": u"Российский рубль",
+                                "minor_units": 100
+                            },
+                        "short_description": item.title,
+                        "title": item.title
+                    })
+                storeItems.append({
+                        "storeId": shop,
+                        "storeName": shop,
+                        "price_list": price_list
+                    })
+        return {
+            "@tfype": "ProductListCardObject",
+            "id": "unique_id_1234",
+            "type": "product_list_formed",
+            "score": 100500,
+            "storeItems": storeItems
         }
