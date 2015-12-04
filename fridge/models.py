@@ -37,7 +37,7 @@ class ItemController(object):
             {
                 "@type": "PriceListPosition",
                 "id": str(item.id),
-                "price": item.price * 100,
+                "price": item.price * 100 if item.price else None,
                 # "img": "milk.png",
                 "description": item.shop_name,
                 "shop_name": item.shop_name,
@@ -84,7 +84,7 @@ class ItemShopController(object):
                     price_list.append({
                         "@type": "PriceListPosition",
                         "id": str(item.id),
-                        "price": item.price * 100,
+                        "price": item.price * 100 if item.price else None,
                         # "img": "milk.png",
                         "description": item.shop_name,
                         "shop_name": item.shop_name,
