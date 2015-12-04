@@ -2,9 +2,8 @@ from flask import Flask
 from flask.ext.pymongo import PyMongo
 
 app = Flask(__name__)
-app.debug = True
-# mongo = PyMongo(app)
-# db = mongo.db['fridge']
+app.config.from_pyfile('default_settings.py')
+mongo = PyMongo(app)
 
 
 class State(object):

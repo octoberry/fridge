@@ -1,5 +1,8 @@
-from wtforms import Form
+from wtforms import Form, StringField, IntegerField, validators
+import wtforms_json
+wtforms_json.init()
 
 
 class ProductForm(Form):
-    pass
+    title = StringField(validators=[validators.required()])
+    count = IntegerField()
