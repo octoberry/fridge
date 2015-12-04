@@ -5,6 +5,9 @@ import json
 
 import urllib2
 
+import pymorphy2
+
+morph = pymorphy2.MorphAnalyzer()
 
 def get_html(url):
     headers = {'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36'}
@@ -213,7 +216,7 @@ class TItemFromNet(TItem):
     def Match(self, query):
         count = 0
         for title in self.targets:
-            count += query.lower() in title.lower()
+            count += (query.lower() in title.lower())
         return count
 
     def doFirst(self):
@@ -251,8 +254,11 @@ class TItemFromNet(TItem):
                        'SelectFew': QuesitonSelectFew(u"Сделайте выбор!", {'select': categories,
                            'sort': 'price'}, tovars, GotoQuestion("HowMany"), saveTo='item')}
 
-        first = categories[0]
+        if not len(categories):
+            self.targets = []
+            return
 
+        first = categories[0]
 
         for i, cat in enumerate(categories):
             uniq_types = set([d[name2id[cat]] for d in self.data if d[name2id[cat]] is not None])
@@ -267,9 +273,9 @@ class TItemFromNet(TItem):
             item_params[cat] = Question(u"Выберете" + cat, answers)
 
 
-        self.item = TItem(u"Пиво", item_params, first)
+        self.item = TItem(u"", item_params, first)
         self.urls = set([d[name2id['link']] for d in self.data if d[name2id[cat]] is not None])
-        self.targets = set([d[name2id[target]] for d in self.data if d[name2id[cat]] is not None])
+        self.targets = set([d[name2id[target]] for d in self.data if d[name2id[target]] is not None])
 
 
 class TItems(object):
@@ -286,7 +292,7 @@ class TItems(object):
         saved = -1
         for index, hi in enumerate(self.hard_items):
             tmp = hi.Match(query)
-            if tmp > saved and saved > 2:
+            if tmp > saved and tmp > 2:
                 saved = tmp
                 saved_index = index
         if saved_index != -1:
@@ -296,15 +302,16 @@ class TItems(object):
         result = []
         words = re.findall(ur'(?u)\w+', query)
         for word in words:
+            word = morph.parse(word)
+            if word and len(word) and word[0] and word[0].normal_form:
+                word = word[0].normal_form
+
             if word.lower() in map(lambda x: x.lower(), self.items):
                 result.append(word)
                 continue
             if self.doNotExactSearch(word) is not None:
                 result.append(word)
         return result
-
-    def splitWords(self, query):
-        return re.findall(ur'(?u)\w+', query)
 
     def doNextWord(self, State):
         words = State['words']
@@ -354,7 +361,7 @@ class TItems(object):
                 return Z[0], Z[1], State
         else:
             if 'words' not in State or not State['words']:
-                State['words'] = re.findall(ur'(?u)\w+', query)
+                State['words'] = self.filterWords(query)
         q, items = self.doNextWord(State)
         return q, items, State
 
@@ -447,6 +454,13 @@ Milk = TItem(u"Молоко",
 
 ALCO = TItemFromNet(os.path.dirname(os.path.abspath(__file__)) + "/126")
 
+arr1 = [118, 119, 120, 121, 122, 123, 125, 126, 127, 128, 129, 130, 131, 132, 1692, 66, 69, 70, 903, 904, 906]
+
+arr2 = [1977, 20, 22, 23, 24, 25, 26, 28, 29, 3, 30, 31, 32, 33, 34, 35, 4, 42, 43, 44, 45, 46, 47, 48, 49]
+
+arr = list(set(arr1 + arr2))
+
+LIST = map(lambda x: TItemFromNet(os.path.dirname(os.path.abspath(__file__)) + "/" + str(x)), arr)
 
 def Print(All):
     if All[0]:
@@ -476,11 +490,12 @@ def GetBeerList():
 
 def GetQuery(query):
     words = re.findall(ur'(?u)\w+', query.lower())
-    if any([u'пиво' in word  for word in words]):
+    word = morph.normalize(word)
+    if any([u'пиво' in word for word in words]):
         return GetBeerList()
-    if any([u'сосиск' in word  for word in words]):
+    if any([u'сосиск' in word for word in words]):
         return GetSosigeList()
-    if any([u'молок' in word  for word in words]):
+    if any([u'молок' in  word for word in words]):
         return GetMilkList()
 
-Items = TItems([Beer, Sosige, Naggets, Milk], [ALCO])
+Items = TItems([Beer, Sosige, Naggets, Milk], LIST)
