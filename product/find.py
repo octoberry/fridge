@@ -328,7 +328,7 @@ class TItems(object):
                 del State['Current']
                 if len(Z[1][0]) > 20:
                     words = ' '.join(Z[1][0].split(' ')[:-1])
-                    Z[1] = (words, Z[1][1], Z[1][2])
+                    Z = [Z[0], (words, Z[1][1], Z[1][2])]
 
                 return Z[0], Z[1], State
         else:
