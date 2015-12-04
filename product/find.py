@@ -1,5 +1,20 @@
 # coding=utf-8
 import re
+import json
+
+import urllib2
+
+def get_html(url):
+    headers = { 'user-agent' :
+'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36'}
+    req = urllib2.Request(url, None, headers)
+    html = urllib2.urlopen(req).read()
+    return html
+
+def google_utkonos(request):
+    url = "http://www.google.com/search?q=" + request + "+site:utkonos.ru";
+    result = get_html(url).split('<a href="/url?q=')
+    return [result[i].split('&')[0] for i in list(range(1,6))]
 
 
 class Action(object):
@@ -61,11 +76,18 @@ class Question(object):
         self.Answers = Answers
         self.Any = Any or DefaultAction()
 
+    def GetItems(self, State):
+        items = self.Answers.keys()
+        if 'Дальше' in items:
+            items = filter(lambda x: x != 'Дальше', items)
+            items.append('Дальше')
+        return items
+
     def Ask(self, State):
-        return self.Q, self.Answers.keys()
+        return self.Q, self.GetItems(State)
 
     def WhatNext(self, answer, State):
-        if answer.lower() in set(map(lambda x: x.lower(), self.Answers.keys())):
+        if answer.lower() in set(map(lambda x: x.lower(), self.GetItems(State))):
             return self.Answers[answer]
         else:
             digit = -1
@@ -76,7 +98,7 @@ class Question(object):
             if digit == -1:
                 return self.Any
             if digit <= len(self.Answers) and digit > 0:
-                return self.Answers[self.Answers.keys()[digit - 1]]
+                return self.Answers[self.GetItems(State)[digit - 1]]
             else:
                 return self.Any
 
@@ -94,9 +116,10 @@ class QuesitonSelectFew(object):
     def getItems(self, State):
         result = []
         for answer, values in self.Answers.iteritems():
-            if all([State[k] == values[k] for k in self.Targets['select']]):
+            if all([State[k] == values[k] for k in self.Targets['select'] if k in State and k in values]):
                 result.append(answer)
-        result = sorted(result, key=lambda x: abs(self.Answers[x][self.Targets['sort']] - State['price']))
+        result = sorted(result, key=lambda x: abs(self.Answers[x][self.Targets['sort']] -
+            State['price']) + 10000 * (x == u'Дальше'))
         result = map(lambda x: x + u', цена: ' + str(self.Answers[x]['price']), result)
         return result
 
@@ -182,10 +205,90 @@ class TItem(object):
         return q, items, State
 
 
+class TItemFromNet(TItem):
+
+    def Match(self, query):
+        count = 0
+        for title in self.targets:
+            count += query in title
+        return count
+
+    def doFirst(self):
+        return self.item.doFirst()
+
+    def do(self, answer, State):
+        return self.item.do(answer, State)
+
+    def __init__(self, filename):
+        self.data = json.load(open(filename, "rt"))
+        self.head = self.data[0]
+        self.data = self.data[1:]
+        name2id = dict(map(lambda x: (x[1], x[0]), enumerate(self.head)))
+        bad_names = ['id', 'link']
+        target = 'name'
+        price = 'price'
+        categories = []
+        for h in self.head:
+            if all([h != bd for bd in bad_names]) and h != target and h != price:
+                categories.append(h)
+        tovars = {}
+        for d in self.data:
+            info = {}
+            for c in categories:
+                info[c] = d[name2id[c]]
+            x = d[name2id[price]]
+            x = x.replace(" ", "")
+            info['price'] = int(x)
+            tovars[d[name2id[target]]] = info
+
+        categories = filter(lambda x: x != price, categories)
+
+        item_params = {'HowMany': QuestionCount(u"Сколько?", 'count', lambda x: AddItemWithCount(**x)),
+                      'ApproxPrice': QuestionCount(u"Приблизительная цена?", 'price', lambda x: GotoQuestion('SelectFew', **x)),
+                      'SelectFew': QuesitonSelectFew(u"Сделайте выбор!", {'select': categories, 'sort': 'price'},
+                          tovars, GotoQuestion("HowMany"), saveTo='item') }
+
+        first = categories[0]
+
+
+        for i, cat in enumerate(categories):
+            uniq_types = set([d[name2id[cat]] for d in self.data if d[name2id[cat]] is not None])
+            answers = {}
+            if i + 1 < len(categories):
+                NextQuestion = categories[i + 1]
+            else:
+                NextQuestion = 'ApproxPrice'
+            for u in uniq_types:
+                answers[u] = GotoQuestion(NextQuestion, **{cat: u})
+            answers['Дальше'] = GotoQuestion(NextQuestion)
+            item_params[cat] = Question(u"Выберете" + cat, answers)
+
+
+        self.item = TItem(u"Пиво", item_params, first)
+        self.urls = set([d[name2id['link']] for d in self.data if d[name2id[cat]] is not None])
+        self.targets = set([d[name2id[target]] for d in self.data if d[name2id[cat]] is not None])
+
+
 class TItems(object):
 
-    def __init__(self, items):
+    def __init__(self, items, hard_items=[]):
         self.items = dict(map(lambda x: (x.Name.lower(), x), items))
+        self.hard_items = hard_items
+
+    def doNotExactSearch(self, query):
+        # print query
+        # urls = google_utkonos(query.encode('utf-8'))
+        # print urls
+        saved_index = -1
+        saved = -1
+        for index, hi in enumerate(self.hard_items):
+            tmp = hi.Match(query)
+            if tmp > saved:
+                saved = tmp
+                saved_index = index
+        if saved_index != -1:
+            return saved_index
+
 
     def doNextWord(self, State):
         words = State['words']
@@ -197,14 +300,25 @@ class TItems(object):
         if word in self.items:
             q, items, State['State'] = self.items[word].doFirst()
             State['Current'] = word
+            State['notExact'] = 1
+            del State['notExact']
         else:
-            q = u"Я не знаю такого товара"
-            items = []
+            notExact = self.doNotExactSearch(word)
+            if notExact is not None:
+                State['notExact'] = 1
+                State['Current'] = notExact
+                q, items, State['State'] = self.hard_items[State['Current']].doFirst()
+            else:
+                q = u"Я не знаю такого товара"
+                items = []
         return q, items
 
     def do(self, query, State):
         if 'Current' in State:
-            Z = self.items[State['Current']].do(query, State['State'])
+            if 'notExact' in State:
+                Z = self.hard_items[State['Current']].do(query, State['State'])
+            else:
+                Z = self.items[State['Current']].do(query, State['State'])
             State['State'] = Z[2]
             if Z[0] is not None:
                 return Z[0], Z[1], State
@@ -305,6 +419,8 @@ Milk = TItem(u"Молоко",
                       }, GotoQuestion("HowMany"), saveTo='item')
               }, 'Usual')
 
+ALCO = TItemFromNet("126")
+
 
 def Print(All):
     if All[0]:
@@ -315,4 +431,4 @@ def Print(All):
         print u"Добавили товар", All[1][0], u"в количестве", All[1][1]
 
 
-Items = TItems([Beer, Sosige, Naggets, Milk])
+Items = TItems([Beer, Sosige, Naggets, Milk], [ALCO])
