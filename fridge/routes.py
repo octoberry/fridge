@@ -96,3 +96,13 @@ def cart_item_list(item_id):
     item = Item.objects.get(id=ObjectId(item_id))
     items_list = GetQuery(item.title)
     return json.dumps(items_list), 200, {'Content-Type': 'application/json; charset=utf-8'}
+
+
+@app.route('/query', methods=['GET'])
+def query():
+    q = request.args.get('q', None)
+    words = Items.filterWords(q)
+    for w in words:
+        item = Item(title=w)
+        item.save()
+    return json.dumps({}), 200, {'Content-Type': 'application/json; charset=utf-8'}
