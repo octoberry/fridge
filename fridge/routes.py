@@ -6,6 +6,7 @@ from flask import request
 from fridge.app import app, cart
 from fridge.forms import ItemForm
 from fridge.models import Item, ItemController, ItemShopController
+from fridge.telegram import Telegram
 from product.find import Items, GetQuery
 
 
@@ -67,6 +68,7 @@ def cart_item_update(item_id):
         item.count = form.data.count
         item.save()
     item = Item.objects.get(id=ObjectId(item_id))
+    Telegram.push(message=u"Список покупок уточнен, добавил %s" % item.shop_name)
     return json.dumps(item.as_api()), 200, {'Content-Type': 'application/json; charset=utf-8'}
 
 
@@ -108,10 +110,13 @@ def query():
     for w in words:
         item = Item(title=w)
         item.save()
+        Telegram.push(message=u"Добавил %s" % w)
     return json.dumps({}), 200, {'Content-Type': 'application/json; charset=utf-8'}
 
 
 @app.route('/cart', methods=['POST'])
 def cart_update():
     cart.status = 'confirmed'
+    Telegram.push(message=u"Корзина сформирована")
+    Telegram.push(message=u"Оплатите покупки")
     return json.dumps({}), 200, {'Content-Type': 'application/json; charset=utf-8'}

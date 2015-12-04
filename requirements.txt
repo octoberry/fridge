@@ -1,4 +1,6 @@
+DAWG-Python==0.7.2
 decorator==4.0.4
+docopt==0.6.2
 Flask==0.10.1
 flask-mongoengine==0.7.4
 Flask-PyMongo==0.4.0
@@ -8,10 +10,11 @@ Jinja2==2.8
 MarkupSafe==0.23
 mongoengine==0.10.5
 pymongo==3.1.1
+pymorphy2==0.8
+pymorphy2-dicts==2.4.393442.3710985
+requests==2.8.1
 six==1.10.0
 validators==0.9
 Werkzeug==0.11.2
 WTForms==2.0.2
 WTForms-JSON==0.2.10
-pymorphy2==0.8
-pymorphy2-dicts==2.4.393442.3710985
