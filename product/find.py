@@ -490,7 +490,6 @@ def GetBeerList():
 
 def GetQuery(query):
     words = re.findall(ur'(?u)\w+', query.lower())
-    word = morph.normalize(word)
     if any([u'пиво' in word for word in words]):
         return GetBeerList()
     if any([u'сосиск' in word for word in words]):
