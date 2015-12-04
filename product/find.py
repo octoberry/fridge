@@ -332,7 +332,12 @@ class TItems(object):
                 if len(Z[1][0]) > 20:
                     words = ' '.join(Z[1][0].split(' ')[:-1])
                     Z = [Z[0], (words, Z[1][1], Z[1][2])]
-
+                magaz = ord(Z[1][0][0]) % 2
+                if magaz:
+                    magaz = "utkonos"
+                else:
+                    magaz = "azbuka"
+                Z = (Z[0], (Z[1][0], Z[1][1], Z[1][2], magaz))
                 return Z[0], Z[1], State
         else:
             if 'words' not in State or not State['words']:
