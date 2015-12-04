@@ -440,7 +440,7 @@ def Print(All):
 
 
 def build(name, price, magaz):
-    return {"name": name, 'price': price, 'magaz': magaz}
+    return {"shop_name": name, 'price': price, 'magaz': magaz}
 
 
 def GetSosigeList():
@@ -462,7 +462,7 @@ def GetQuery(query):
         return GetBeerList()
     if any([u'сосиск' in word  for word in words]):
         return GetSosigeList()
-    if any([u'пиво' in word  for word in words]):
+    if any([u'молок' in word  for word in words]):
         return GetMilkList()
 
 Items = TItems([Beer, Sosige, Naggets, Milk], [ALCO])
