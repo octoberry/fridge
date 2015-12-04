@@ -104,6 +104,7 @@ def cart_item_list(item_id):
 def query():
     q = request.args.get('q', None)
     words = Items.filterWords(q)
+    words = list(set(words))
     for w in words:
         item = Item(title=w)
         item.save()
