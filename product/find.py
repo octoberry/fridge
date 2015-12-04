@@ -1,6 +1,8 @@
-class Action:
+# coding=utf-8
+class Action(object):
     def update(self, State):
         pass
+
 
 class AddItem(Action):
     def __init__(self, **argv):
@@ -10,6 +12,7 @@ class AddItem(Action):
         State['end'] = 1
         for k, v in self.argv.iteritems():
             State[k] = v
+
 
 class AddItemWithCount(Action):
     def __init__(self, **argv):
@@ -31,15 +34,18 @@ class GotoQuestion(Action):
         for k, v in self.argv.iteritems():
             State[k] = v
 
+
 class DefaultAction(Action):
     def update(self, State):
         pass
 
-class Answer:
+
+class Answer(object):
     def __init__(self):
         pass
 
-class Question:
+
+class Question(object):
     def __init__(self, Q, Answers, Any=DefaultAction()):
         self.Q = Q
         self.Answers = Answers
@@ -64,18 +70,19 @@ class Question:
             else:
                 return self.Any
 
-class QuesitonSelectFew:
+
+class QuesitonSelectFew(object):
     def __init__(self, Q, Answers, FuncAction, Any=DefaultAction(), saveTo='item'):
         self.Q = Q
         self.Answers = Answers
         self.Any = Any
         self.FuncAction = FuncAction
-        self.saveTo='item'
+        self.saveTo = 'item'
 
     def getItems(self, State):
         result = []
         for answer, values in self.Answers.iteritems():
-            if all([State[k] == v for k,v in values.iteritems()]):
+            if all([State[k] == v for k, v in values.iteritems()]):
                 result.append(answer)
         return result
 
@@ -121,19 +128,20 @@ class QuestionCount(Question):
         else:
             return self.Any
 
-class State:
+
+class State(object):
     def __init__(self):
         pass
 
-class TItem:
+
+class TItem(object):
     def __init__(self, Name, Questions, FirstQuestion):
         self.FirstQuestion = FirstQuestion
         self.Questions = Questions
         self.Name = Name
 
     def doFirst(self):
-        State = {}
-        State['CurrentQuestion'] = self.FirstQuestion
+        State = {'CurrentQuestion': self.FirstQuestion}
         q, items = self.Questions[State['CurrentQuestion']].Ask(State)
         return q, items, State
 
@@ -148,37 +156,39 @@ class TItem:
 
 def CD(**argv):
     return argv
+
+
 def Create(b, c):
     return {'bankatype': b, 'color': c}
 
 
-Beer = TItem("Beer", {'Usual':
-                 Question("Как обычно?", {"Да": AddItem(item="Жигули 4.9% 0.5 литра"), "Нет": GotoQuestion("BeerType")}),
-             'BeerType':
-                 Question("Какое хотите?", {"Жигули": GotoQuestion("HowMany", item="Жигули 4.9% 0.5 литра"),
-                                            "Балтика№0": GotoQuestion("HowMany", item="Балтика 0.5% 0.5 литра"),
-                                            "Балтика№3": GotoQuestion("HowMany", item="Балтика 4.8% 0.5 литра"),
+Beer = TItem("Beer",
+             {'Usual': Question(u"Как обычно?",
+                                {u"Да": AddItem(item=u"Жигули 4.9% 0.5 литра"),
+                                 u"Нет": GotoQuestion("BeerType")}),
+              'BeerType': Question(u"Какое хотите?", {
+                  u"Жигули": GotoQuestion("HowMany", item="Жигули 4.9% 0.5 литра"),
+                  u"Балтика№0": GotoQuestion("HowMany", item=u"Балтика 0.5% 0.5 литра"),
+                  u"Балтика№3": GotoQuestion("HowMany", item=u"Балтика 4.8% 0.5 литра"),
+                  u"Другое": GotoQuestion("Other")}),
+              'HowMany': QuestionCount(u"Сколько?"),
+              'Other': Question(u"Темное или светлое?",
+                                {u"Темное": GotoQuestion("BankaType", color="black"),
+                                 u"Светлое": GotoQuestion("BankaType", color="white")}),
+              'BankaType': Question("Банка или бутылка?",
+                                    {u"Банка": GotoQuestion("SelectFew", bankatype="banka"),
+                                     u"Бутылка": GotoQuestion("SelectFew", bankatype="butilka")}),
+              'SelectFew': QuesitonSelectFew(u"Сделайте выбор!",
+                                             {u'Жигули 3% black': Create("banka", "black"),
+                                              u'Жигули 3% white': Create("banka", "white"),
+                                              u'Жигули 3% butilka black': Create("butilka", "black"),
+                                              u'Жигули 3% butilka white': Create("butilka", "white"),
+                                              u'Жигули 9% black': Create("banka", "black"),
+                                              u'Жигули 9% white': Create("banka", "white"),
+                                              u'Жигули 9% butilka black': Create("butilka", "black"),
+                                              u'Жигули 9% butilka white': Create("butilka", "white")},
+                                             GotoQuestion("HowMany"), saveTo='item')}, "Usual")
 
-                                            "Другое": GotoQuestion("Other")}),
-             'HowMany':
-                 QuestionCount("Сколько?"),
-             'Other':
-                 Question("Темное или светлое?", {"Темное": GotoQuestion("BankaType", color="black"),
-                                                  "Светлое": GotoQuestion("BankaType", color="white")}),
-             'BankaType':
-                  Question("Банка или бутылка?", {"Банка": GotoQuestion("SelectFew", bankatype="banka"),
-                                                   "Бутылка": GotoQuestion("SelectFew", bankatype="butilka")}),
-             'SelectFew':
-                  QuesitonSelectFew("Сделайте выбор!", {'Жигули 3% black': Create("banka", "black"),
-                                                        'Жигули 3% white': Create("banka", "white"),
-                                                        'Жигули 3% butilka black': Create("butilka", "black"),
-                                                        'Жигули 3% butilka white': Create("butilka", "white"),
-                                                        'Жигули 9% black': Create("banka", "black"),
-                                                        'Жигули 9% white': Create("banka", "white"),
-                                                        'Жигули 9% butilka black': Create("butilka", "black"),
-                                                        'Жигули 9% butilka white': Create("butilka", "white")},
-                                    GotoQuestion("HowMany"), saveTo='item')
-            }, "Usual")
 
 def Print(All):
     if All[0]:
@@ -186,4 +196,4 @@ def Print(All):
         for i, x in enumerate(All[1]):
             print i + 1, x
     else:
-        print "Добавили товар", All[1][0], "в количестве", All[1][1]
+        print u"Добавили товар", All[1][0], u"в количестве", All[1][1]
