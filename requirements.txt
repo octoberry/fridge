@@ -1,5 +1,12 @@
+decorator==4.0.4
 Flask==0.10.1
+Flask-PyMongo==0.4.0
 itsdangerous==0.24
 Jinja2==2.8
 MarkupSafe==0.23
+pymongo==3.1.1
+six==1.10.0
+validators==0.9
 Werkzeug==0.11.2
+WTForms==2.0.2
+WTForms-JSON==0.2.10
