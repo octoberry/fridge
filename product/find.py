@@ -213,7 +213,7 @@ class TItemFromNet(TItem):
     def Match(self, query):
         count = 0
         for title in self.targets:
-            count += query in title
+            count += query.lower() in title.lower()
         return count
 
     def doFirst(self):
@@ -286,12 +286,25 @@ class TItems(object):
         saved = -1
         for index, hi in enumerate(self.hard_items):
             tmp = hi.Match(query)
-            if tmp > saved and saved > 1:
+            if tmp > saved and saved > 2:
                 saved = tmp
                 saved_index = index
         if saved_index != -1:
             return saved_index
 
+    def filterWords(self, query):
+        result = []
+        words = re.findall(ur'(?u)\w+', query)
+        for word in words:
+            if word.lower() in map(lambda x: x.lower(), self.items):
+                result.append(word)
+                continue
+            if self.doNotExactSearch(word) is not None:
+                result.append(word)
+        return result
+
+    def splitWords(self, query):
+        return re.findall(ur'(?u)\w+', query)
 
     def doNextWord(self, State):
         words = State['words']
