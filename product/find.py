@@ -221,6 +221,8 @@ class TItemFromNet(TItem):
 
     def Match(self, query):
         count = 0
+        if len(query) <= 2:
+            return 0
         for title in self.targets:
             count += (query.lower() in title.lower())
         return count
