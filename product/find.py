@@ -88,7 +88,8 @@ class Question(object):
 
     def WhatNext(self, answer, State):
         if answer.lower() in set(map(lambda x: x.lower(), self.GetItems(State))):
-            return self.Answers[answer]
+            arr = [k for k in self.Answers.iterkeys() if k.lower() == answer.lower()]
+            self.Answers[arr[0]]
         else:
             digit = -1
             try:
@@ -366,14 +367,14 @@ Beer = TItem(u"Пиво",
                                      u"Бутылка": GotoQuestion("ApproxPrice", bankatype="butilka")}),
                                     'SelectFew': QuesitonSelectFew(u"Сделайте выбор!", {'select':
                                         ['color', 'bankatype'], 'sort': 'price'}, {
-                    u'Жигули 3% black': CreateBeer("banka", "black", 30),
-                    u'Жигули 3% white': CreateBeer("banka", "white", 50),
-                    u'Жигули 3% butilka black': CreateBeer("butilka", "black", 80),
-                    u'Жигули 3% butilka white': CreateBeer("butilka", "white", 90),
-                    u'Жигули 9% black': CreateBeer("banka", "black", 102),
-                    u'Жигули 9% white': CreateBeer("banka", "white", 30),
-                    u'Жигули 9% butilka black': CreateBeer("butilka", "black", 50),
-                    u'Жигули 9% butilka white': CreateBeer("butilka", "white", 20)},
+                    u'Жигули 3%': CreateBeer("banka", "black", 30),
+                    u'Жигули 3%': CreateBeer("banka", "white", 50),
+                    u'Балтика 3%': CreateBeer("butilka", "black", 80),
+                    u'Балтика 3%': CreateBeer("butilka", "white", 90),
+                    u'Балтика 9%': CreateBeer("banka", "black", 102),
+                    u'Жигули 9%': CreateBeer("banka", "white", 30),
+                    u'Жигули 9%': CreateBeer("butilka", "black", 50),
+                    u'Жигули 9%': CreateBeer("butilka", "white", 20)},
                                              GotoQuestion("HowMany"), saveTo='item')}, "BeerType")
 
 Sosige = TItem(u"Сосиски",
