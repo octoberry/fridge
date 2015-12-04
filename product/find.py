@@ -223,8 +223,12 @@ def ExtendDict(**argv):
     return argv
 
 
-def Create(b, c, p):
+def CreateBeer(b, c, p):
     return {'bankatype': b, 'color': c, 'price': p}
+
+
+def CreateMilk(fast, fat, price):
+    return {'fast': fast, 'fat': fat, 'price': price}
 
 
 Beer = TItem(u"Пиво",
@@ -248,15 +252,58 @@ Beer = TItem(u"Пиво",
                                      u"Бутылка": GotoQuestion("ApproxPrice", bankatype="butilka")}),
                                     'SelectFew': QuesitonSelectFew(u"Сделайте выбор!", {'select':
                                         ['color', 'bankatype'], 'sort': 'price'}, {
-                    u'Жигули 3% black': Create("banka", "black", 30),
-                    u'Жигули 3% white': Create("banka", "white", 50),
-                    u'Жигули 3% butilka black': Create("butilka", "black", 80),
-                    u'Жигули 3% butilka white': Create("butilka", "white", 90),
-                    u'Жигули 9% black': Create("banka", "black", 102),
-                    u'Жигули 9% white': Create("banka", "white", 30),
-                    u'Жигули 9% butilka black': Create("butilka", "black", 50),
-                    u'Жигули 9% butilka white': Create("butilka", "white", 20)},
-                                             GotoQuestion("HowMany"), saveTo='item')}, "Usual")
+                    u'Жигули 3% black': CreateBeer("banka", "black", 30),
+                    u'Жигули 3% white': CreateBeer("banka", "white", 50),
+                    u'Жигули 3% butilka black': CreateBeer("butilka", "black", 80),
+                    u'Жигули 3% butilka white': CreateBeer("butilka", "white", 90),
+                    u'Жигули 9% black': CreateBeer("banka", "black", 102),
+                    u'Жигули 9% white': CreateBeer("banka", "white", 30),
+                    u'Жигули 9% butilka black': CreateBeer("butilka", "black", 50),
+                    u'Жигули 9% butilka white': CreateBeer("butilka", "white", 20)},
+                                             GotoQuestion("HowMany"), saveTo='item')}, "BeerType")
+
+Sosige = TItem(u"Сосиски",
+             {'Usual': Question(u"Как обычно?",
+                                {u"Да": AddItem(item=u"Сосиски Клинские 300 грамм", price='130'),
+                                 u"Нет": AddItem(item=u"Сосиски НеКлинские не любимые 300 грамм", price='70')})}, 'Usual')
+
+Naggets = TItem(u"Наггетсы",
+             {'Usual': Question(u"Как обычно?",
+                                {u"Да": AddItem(item=u"Наггетсы c сыром Клинские 300 грамм", price='130'),
+                                 u"Нет": AddItem(item=u"Наггетсы НеКлинские не любимые 300 грамм", price='70')})}, 'Usual')
+
+Milk = TItem(u"Молоко",
+             {'Usual': Question(u"Как обычно?",
+                                {u"Да": AddItem(item=u"Молоко 1 литр пастеризованное", price='60'),
+                                 u"Нет": GotoQuestion("MilkType")} ),
+              'HowMany': QuestionCount(u"Сколько?", 'count',
+                  lambda x: AddItemWithCount(**x)),
+              'MilkType': Question('Какое хотите?', {
+                  u'Ясный луч 3.2% 1л, ультрапастеризованное': GotoQuestion("HowMany", item=u'Ясный луч 3.2% 1л, ультрапастеризованное', price=80),
+                  u'Простоквашно 3,4-4,5% пастеризованое': GotoQuestion("HowMany",
+                      item=u'Простоквашно 3,4-4,5% пастеризованое', price=75),
+                  u'Домик в деревне ультрапастеризованное, 3.2%': GotoQuestion("HowMany",
+                      item=u'Простоквашно 3,4-4,5% пастеризованое', price=75),
+                  u'Другое':GotoQuestion("Other")}),
+              'Other': Question(u"Скоропортящееся?",
+                                {u"Да": GotoQuestion("fat", fast='1'),
+                                 u"Нет": GotoQuestion("fat", fast='2')}),
+              'ApproxPrice': QuestionCount(u"Приблизительная цена?", 'price', lambda x:
+                  GotoQuestion('select', **x)),
+              'fat': Question(u'Жирность?', {
+                                  u'Диетическое': GotoQuestion("ApproxPrice", fat='0'),
+                                  u'Средней жирности': GotoQuestion("ApproxPrice", fat='1'),
+                                  u'Жирное': GotoQuestion("ApproxPrice", fat='2')}),
+              'select':  QuesitonSelectFew(u"Время делать выбор!", {'select': ['fat', 'fast'],
+                  'sort': 'price'}, {
+                    u'Ясный луч 3.2% 1л, ультрапастеризованное': CreateMilk("1", "0", 60),
+                    u'Простоквашно 3,4-4,5% пастеризованое': CreateMilk("1", "1", 60),
+                    u'Самое лучше молоко': CreateMilk("1", "2", 60),
+                    u'Самое худшее молоко': CreateMilk("2", "0", 60),
+                    u'Домик в деревне ультрапастеризованное, 3.2%': CreateMilk("2", "1", 60),
+                    u'Неизвестная марка молока': CreateMilk("2", "2", 60),
+                      }, GotoQuestion("HowMany"), saveTo='item')
+              }, 'Usual')
 
 
 def Print(All):
@@ -268,4 +315,4 @@ def Print(All):
         print u"Добавили товар", All[1][0], u"в количестве", All[1][1]
 
 
-Items = TItems([Beer])
+Items = TItems([Beer, Sosige, Naggets, Milk])
