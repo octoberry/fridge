@@ -12,8 +12,21 @@ class Item(Document):
         self._id = None
         super(Item, self).__init__(*args, **values)
 
+    def as_api(self):
+        return {
+            'id': str(self.id),
+            'title': self.title,
+            'shop_name': self.shop_name,
+            'price': self.price,
+            'count': self.count
+        }
+
 
 class ItemController(object):
+    @staticmethod
+    def items_as_dict(items):
+        return [i.as_api() for i in items]
+
     @staticmethod
     def items_as_ios(items):
         price_list = [
@@ -23,6 +36,7 @@ class ItemController(object):
                 "price": item.price,
                 # "img": "milk.png",
                 "description": item.shop_name,
+                "shop_name": item.shop_name,
                 "count": item.count,
                 "currency":
                     {
@@ -31,7 +45,8 @@ class ItemController(object):
                         "readable_name": u"Российский рубль",
                         "minor_units": 100
                     },
-                "short_description": item.title
+                "short_description": item.title,
+                "title": item.title
             } for item in items
         ]
         return {

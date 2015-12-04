@@ -1,5 +1,7 @@
 # coding=utf-8
 import json
+
+from bson import ObjectId
 from flask import request
 from fridge.app import app, state
 from fridge.forms import ItemForm
@@ -76,19 +78,32 @@ def cart_items_list():
             ]
         }), 200, {'Content-Type': 'application/json; charset=utf-8'}
     else:
+        xview = request.headers.get('X-Fridge-view', None)
         items = Item.objects
-        return json.dumps(ItemController.items_as_ios(items)), 200, {'Content-Type': 'application/json; charset=utf-8'}
+        if xview == 'ios':
+            data = ItemController.items_as_ios(items)
+        else:
+            data = ItemController.items_as_dict(items)
+        return json.dumps(data), 200, {'Content-Type': 'application/json; charset=utf-8'}
 
 
-@app.route('/cart/item/<string:item_id>', methods=['GET', 'DELETE'])
-def cart_item(item_id):
-    print item_id
-    return '', 200
+@app.route('/cart/item/<string:item_id>', methods=['GET'])
+def cart_item_get(item_id):
+    item = Item.objects.get(id=ObjectId(item_id))
+    return json.dumps(item.as_api()), 200, {'Content-Type': 'application/json; charset=utf-8'}
 
 
-@app.route('/product/find', methods=['GET'])
-def product_find():
+@app.route('/cart/item/<string:item_id>', methods=['DELETE'])
+def cart_item_del(item_id):
+    Item.objects(id=ObjectId(item_id)).delete()
+    return json.dumps({}), 200, {'Content-Type': 'application/json; charset=utf-8'}
+
+
+@app.route('/cart/item/<string:item_id>/define', methods=['GET'])
+def cart_item_define(item_id):
     title = request.args.get('title')
+    # item = Item.objects.get(id=ObjectId(item_id))
+
     q, items, s = Items.do(title, state.get_state())
     state.set_state(s)
     return "%s, %s" % (q, items), 200
