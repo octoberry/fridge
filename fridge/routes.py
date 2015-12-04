@@ -3,7 +3,7 @@ import json
 
 from bson import ObjectId
 from flask import request
-from fridge.app import app
+from fridge.app import app, cart
 from fridge.forms import ItemForm
 from fridge.models import Item, ItemController, ItemShopController
 from product.find import Items, GetQuery
@@ -24,8 +24,8 @@ def cart_items():
 
 @app.route('/cart/items', methods=['GET'])
 def cart_items_list():
-    shop = request.args.get('shop', None)
-    if shop:
+    # shop = request.args.get('shop', None)
+    if cart.status == 'confirmed':
         xview = request.headers.get('X-Fridge-view', None)
         items = Item.objects
         if xview == 'ios':
@@ -80,15 +80,17 @@ def cart_item_define(item_id):
     item.state = json.dumps(s)
     f = False
     if q is None:
+        print a
         item.shop_name = a[0]
         item.count = a[1]
-        item.price = a[2]
+        item.price = float(a[2])
         item.magaz = a[3]
         q = u"Принято!"
         a = []
         f = True
     item.save()
-    return json.dumps({'question': q, 'answers': a, 'finished': f}), 200, {'Content-Type': 'application/json; charset=utf-8'}
+    return json.dumps({'question': q, 'answers': a, 'finished': f}), 200, {
+        'Content-Type': 'application/json; charset=utf-8'}
 
 
 @app.route('/cart/item/<string:item_id>/list', methods=['GET'])
@@ -105,4 +107,10 @@ def query():
     for w in words:
         item = Item(title=w)
         item.save()
+    return json.dumps({}), 200, {'Content-Type': 'application/json; charset=utf-8'}
+
+
+@app.route('/cart', methods=['POST'])
+def cart_update():
+    cart.status = 'confirmed'
     return json.dumps({}), 200, {'Content-Type': 'application/json; charset=utf-8'}
