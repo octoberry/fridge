@@ -107,5 +107,11 @@ def cart_item_define(item_id):
         title = item.title
     q, a, s = Items.do(title, json.loads(item.state))
     item.state = json.dumps(s)
+    if q is None:
+        item.shop_name = a[0]
+        item.count = a[1]
+        item.price = 50
+        q = u"Принято!"
+        a = []
     item.save()
     return json.dumps({'question': q, 'answers': a}), 200, {'Content-Type': 'application/json; charset=utf-8'}
