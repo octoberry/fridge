@@ -83,27 +83,39 @@ class Question(object):
 
 class QuesitonSelectFew(object):
 
-    def __init__(self, Q, Answers, FuncAction, Any=None, saveTo='item'):
+    def __init__(self, Q, Targets, Answers, FuncAction, Any=None, saveTo='item'):
         self.Q = Q
         self.Answers = Answers
         self.Any = Any or DefaultAction()
         self.FuncAction = FuncAction
+        self.Targets = Targets
         self.saveTo = saveTo
 
     def getItems(self, State):
         result = []
         for answer, values in self.Answers.iteritems():
-            if all([State[k] == v for k, v in values.iteritems()]):
+            if all([State[k] == values[k] for k in self.Targets['select']]):
                 result.append(answer)
+        result = sorted(result, key=lambda x: abs(self.Answers[x][self.Targets['sort']] - State['price']))
+        result = map(lambda x: x + u', цена: ' + str(self.Answers[x]['price']), result)
         return result
 
     def Ask(self, State):
         return self.Q, self.getItems(State)
 
+    def TryMatchPrice(self, real_answer):
+        for answer, values in self.Answers.iteritems():
+            if 'price' in values and real_answer.startswith(answer):
+                return values['price']
+        return None
+
     def WhatNext(self, answer, State):
         items = self.getItems(State)
         if answer in items:
             State[self.saveTo] = answer
+            price = self.TryMatchPrice(answer)
+            if price is not None:
+                State['price'] = price
             return self.FuncAction
         else:
             digit = -1
@@ -122,8 +134,10 @@ class QuesitonSelectFew(object):
 
 class QuestionCount(Question):
 
-    def __init__(self, Q, Any=None):
+    def __init__(self, Q, field, func, Any=None):
         self.Q = Q
+        self.field = field
+        self.func = func
         self.Any = Any or DefaultAction()
 
     def Ask(self, State):
@@ -136,7 +150,7 @@ class QuestionCount(Question):
         except Exception:
             pass
         if digit:
-            return AddItemWithCount(count=digit)
+            return self.func({self.field: digit})
         else:
             return self.Any
 
@@ -163,7 +177,7 @@ class TItem(object):
         action = self.Questions[State['CurrentQuestion']].WhatNext(answer, State)
         action.update(State)
         if 'end' in State and State['end']:
-            return None, (State['item'], State.get('count', 1)), None
+            return None, (State['item'], State.get('count', 1), State['price']), None
         q, items = self.Questions[State['CurrentQuestion']].Ask(State)
         return q, items, State
 
@@ -197,14 +211,15 @@ class TItems(object):
             else:
                 #  save item to cart
                 del State['Current']
+                return Z[0], Z[1], State
         else:
-            State['words'] = re.findall(ur'(?u)\w+', query)
-            print State['words']
+            if 'words' not in State or not State['words']:
+                State['words'] = re.findall(ur'(?u)\w+', query)
         q, items = self.doNextWord(State)
         return q, items, State
 
 
-def CD(**argv):
+def ExtendDict(**argv):
     return argv
 
 
@@ -214,21 +229,25 @@ def Create(b, c, p):
 
 Beer = TItem(u"Пиво",
              {'Usual': Question(u"Как обычно?",
-                                {u"Да": AddItem(item=u"Жигули 4.9% 0.5 литра"),
+                                {u"Да": AddItem(item=u"Жигули 4.9% 0.5 литра", price='40'),
                                  u"Нет": GotoQuestion("BeerType")}),
               'BeerType': Question(u"Какое хотите?", {
-                  u"Жигули": GotoQuestion("HowMany", item="Жигули 4.9% 0.5 литра"),
-                  u"Балтика№0": GotoQuestion("HowMany", item=u"Балтика 0.5% 0.5 литра"),
-                  u"Балтика№3": GotoQuestion("HowMany", item=u"Балтика 4.8% 0.5 литра"),
+                  u"Жигули": GotoQuestion("HowMany", item="Жигули 4.9% 0.5 литра", price=40),
+                  u"Балтика№0": GotoQuestion("HowMany", item=u"Балтика 0.5% 0.5 литра", price=50),
+                  u"Балтика№3": GotoQuestion("HowMany", item=u"Балтика 4.8% 0.5 литра", price=80),
                   u"Другое": GotoQuestion("Other")}),
-              'HowMany': QuestionCount(u"Сколько?"),
+              'HowMany': QuestionCount(u"Сколько?", 'count',
+                  lambda x: AddItemWithCount(**x)),
+              'ApproxPrice': QuestionCount(u"Приблизительная цена?", 'price', lambda x:
+                  GotoQuestion('SelectFew', **x)),
               'Other': Question(u"Темное или светлое?",
                                 {u"Темное": GotoQuestion("BankaType", color="black"),
                                  u"Светлое": GotoQuestion("BankaType", color="white")}),
               'BankaType': Question("Банка или бутылка?",
-                                    {u"Банка": GotoQuestion("SelectFew", bankatype="banka"),
-                                     u"Бутылка": GotoQuestion("SelectFew", bankatype="butilka")}),
-              'SelectFew': QuesitonSelectFew(u"Сделайте выбор!", {
+                                    {u"Банка": GotoQuestion("ApproxPrice", bankatype="banka"),
+                                     u"Бутылка": GotoQuestion("ApproxPrice", bankatype="butilka")}),
+                                    'SelectFew': QuesitonSelectFew(u"Сделайте выбор!", {'select':
+                                        ['color', 'bankatype'], 'sort': 'price'}, {
                     u'Жигули 3% black': Create("banka", "black", 30),
                     u'Жигули 3% white': Create("banka", "white", 50),
                     u'Жигули 3% butilka black': Create("butilka", "black", 80),
