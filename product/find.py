@@ -13,6 +13,7 @@ def morphy_word(word):
     word = morph.parse(word)
     if word and len(word) and word[0] and word[0].normal_form:
         word = word[0].normal_form
+    return word
 
 def get_html(url):
     headers = {'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36'}
@@ -275,7 +276,7 @@ class TItemFromNet(TItem):
             for u in uniq_types:
                 answers[u] = GotoQuestion(NextQuestion, **{cat: u})
             answers['Дальше'] = GotoQuestion(NextQuestion)
-            item_params[cat] = Question(u"Выберете" + cat, answers)
+            item_params[cat] = Question(u"Выберете " + cat, answers)
 
 
         self.item = TItem(u"", item_params, first)
