@@ -4,7 +4,7 @@ import json
 from flask import request
 from fridge.app import app, state
 from fridge.forms import ProductForm
-from product.find import Beer
+from product.find import Items
 
 
 @app.route('/cart/items', methods=['POST'])
@@ -59,7 +59,7 @@ def cart_items_list():
                 "short_description": "Сосисоны. 10шт."
             }
         ]
-    }), 200
+    }), 200, {'Content-Type': 'application/json; charset=utf-8'}
 
 
 @app.route('/cart/item/<string:item_id>', methods=['GET', 'DELETE'])
@@ -71,10 +71,6 @@ def cart_item(item_id):
 @app.route('/product/find', methods=['GET'])
 def product_find():
     title = request.args.get('title')
-    if u'пиво' in title:
-        q, items, s = Beer.doFirst()
-        state.set_state(s)
-    else:
-        q, items, s = Beer.do(title, state.get_state())
-        state.set_state(s)
+    q, items, s = Items.do(title, state.get_state())
+    state.set_state(s)
     return "%s, %s" % (q, items), 200

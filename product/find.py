@@ -195,6 +195,7 @@ class TItems(object):
             if Z[0] is not None:
                 return Z[0], Z[1], State
             else:
+                #  save item to cart
                 del State['Current']
         else:
             State['words'] = re.findall(ur'(?u)\w+', query)
