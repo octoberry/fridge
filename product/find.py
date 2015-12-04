@@ -1,8 +1,10 @@
 # coding=utf-8
+import os
 import re
 import json
 
 import urllib2
+
 
 def get_html(url):
     headers = { 'user-agent' :
@@ -10,6 +12,7 @@ def get_html(url):
     req = urllib2.Request(url, None, headers)
     html = urllib2.urlopen(req).read()
     return html
+
 
 def google_utkonos(request):
     url = "http://www.google.com/search?q=" + request + "+site:utkonos.ru";
@@ -372,13 +375,13 @@ Beer = TItem(u"Пиво",
                                     'SelectFew': QuesitonSelectFew(u"Сделайте выбор!", {'select':
                                         ['color', 'bankatype'], 'sort': 'price'}, {
                     u'Жигули 3%': CreateBeer("banka", "black", 30),
-                    u'Жигули 3%': CreateBeer("banka", "white", 50),
+                    u'Жигули a 3%': CreateBeer("banka", "white", 50),
                     u'Балтика 3%': CreateBeer("butilka", "black", 80),
-                    u'Балтика 3%': CreateBeer("butilka", "white", 90),
+                    u'Балтика a 3%': CreateBeer("butilka", "white", 90),
                     u'Балтика 9%': CreateBeer("banka", "black", 102),
                     u'Жигули 9%': CreateBeer("banka", "white", 30),
-                    u'Жигули 9%': CreateBeer("butilka", "black", 50),
-                    u'Жигули 9%': CreateBeer("butilka", "white", 20)},
+                    u'Жигули a 9%': CreateBeer("butilka", "black", 50),
+                    u'Жигули b 9%': CreateBeer("butilka", "white", 20)},
                                              GotoQuestion("HowMany"), saveTo='item')}, "BeerType")
 
 Sosige = TItem(u"Сосиски",
@@ -424,7 +427,7 @@ Milk = TItem(u"Молоко",
                       }, GotoQuestion("HowMany"), saveTo='item')
               }, 'Usual')
 
-ALCO = TItemFromNet("126")
+ALCO = TItemFromNet(os.path.dirname(os.path.abspath(__file__)) + "/126")
 
 
 def Print(All):
