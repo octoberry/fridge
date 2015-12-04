@@ -1,10 +1,15 @@
 # coding=utf-8
+import re
+
+
 class Action(object):
+
     def update(self, State):
         pass
 
 
 class AddItem(Action):
+
     def __init__(self, **argv):
         self.argv = argv
 
@@ -15,6 +20,7 @@ class AddItem(Action):
 
 
 class AddItemWithCount(Action):
+
     def __init__(self, **argv):
         self.argv = argv
 
@@ -25,6 +31,7 @@ class AddItemWithCount(Action):
 
 
 class GotoQuestion(Action):
+
     def __init__(self, next_, **argv):
         self.next_ = next_
         self.argv = argv
@@ -36,16 +43,19 @@ class GotoQuestion(Action):
 
 
 class DefaultAction(Action):
+
     def update(self, State):
         pass
 
 
 class Answer(object):
+
     def __init__(self):
         pass
 
 
 class Question(object):
+
     def __init__(self, Q, Answers, Any=None):
         self.Q = Q
         self.Answers = Answers
@@ -55,13 +65,13 @@ class Question(object):
         return self.Q, self.Answers.keys()
 
     def WhatNext(self, answer, State):
-        if answer in self.Answers:
+        if answer.lower() in set(map(lambda x: x.lower(), self.Answers.keys())):
             return self.Answers[answer]
         else:
             digit = -1
             try:
                 digit = int(answer)
-            except:
+            except Exception:
                 pass
             if digit == -1:
                 return self.Any
@@ -72,6 +82,7 @@ class Question(object):
 
 
 class QuesitonSelectFew(object):
+
     def __init__(self, Q, Answers, FuncAction, Any=None, saveTo='item'):
         self.Q = Q
         self.Answers = Answers
@@ -98,7 +109,7 @@ class QuesitonSelectFew(object):
             digit = -1
             try:
                 digit = int(answer)
-            except:
+            except Exception:
                 pass
             if digit == -1:
                 return self.Any
@@ -110,6 +121,7 @@ class QuesitonSelectFew(object):
 
 
 class QuestionCount(Question):
+
     def __init__(self, Q, Any=None):
         self.Q = Q
         self.Any = Any or DefaultAction()
@@ -121,7 +133,7 @@ class QuestionCount(Question):
         digit = -1
         try:
             digit = int(answer)
-        except:
+        except Exception:
             pass
         if digit:
             return AddItemWithCount(count=digit)
@@ -130,11 +142,13 @@ class QuestionCount(Question):
 
 
 class State(object):
+
     def __init__(self):
         pass
 
 
 class TItem(object):
+
     def __init__(self, Name, Questions, FirstQuestion):
         self.FirstQuestion = FirstQuestion
         self.Questions = Questions
@@ -154,15 +168,50 @@ class TItem(object):
         return q, items, State
 
 
+class TItems(object):
+
+    def __init__(self, items):
+        self.items = dict(map(lambda x: (x.Name.lower(), x), items))
+
+    def doNextWord(self, State):
+        words = State['words']
+        if not words:
+            return "Заказываем?", []
+        word = words[0]
+        words = words[1:]
+        State['words'] = words
+        if word in self.items:
+            q, items, State['State'] = self.items[word].doFirst()
+            State['Current'] = word
+        else:
+            q = u"Я не знаю такого товара"
+            items = []
+        return q, items
+
+    def do(self, query, State):
+        if 'Current' in State:
+            Z = self.items[State['Current']].do(query, State['State'])
+            State['State'] = Z[2]
+            if Z[0] is not None:
+                return Z[0], Z[1], State
+            else:
+                del State['Current']
+        else:
+            State['words'] = re.findall(ur'(?u)\w+', query)
+            print State['words']
+        q, items = self.doNextWord(State)
+        return q, items, State
+
+
 def CD(**argv):
     return argv
 
 
-def Create(b, c):
-    return {'bankatype': b, 'color': c}
+def Create(b, c, p):
+    return {'bankatype': b, 'color': c, 'price': p}
 
 
-Beer = TItem("Beer",
+Beer = TItem(u"Пиво",
              {'Usual': Question(u"Как обычно?",
                                 {u"Да": AddItem(item=u"Жигули 4.9% 0.5 литра"),
                                  u"Нет": GotoQuestion("BeerType")}),
@@ -178,15 +227,15 @@ Beer = TItem("Beer",
               'BankaType': Question("Банка или бутылка?",
                                     {u"Банка": GotoQuestion("SelectFew", bankatype="banka"),
                                      u"Бутылка": GotoQuestion("SelectFew", bankatype="butilka")}),
-              'SelectFew': QuesitonSelectFew(u"Сделайте выбор!",
-                                             {u'Жигули 3% black': Create("banka", "black"),
-                                              u'Жигули 3% white': Create("banka", "white"),
-                                              u'Жигули 3% butilka black': Create("butilka", "black"),
-                                              u'Жигули 3% butilka white': Create("butilka", "white"),
-                                              u'Жигули 9% black': Create("banka", "black"),
-                                              u'Жигули 9% white': Create("banka", "white"),
-                                              u'Жигули 9% butilka black': Create("butilka", "black"),
-                                              u'Жигули 9% butilka white': Create("butilka", "white")},
+              'SelectFew': QuesitonSelectFew(u"Сделайте выбор!", {
+                    u'Жигули 3% black': Create("banka", "black", 30),
+                    u'Жигули 3% white': Create("banka", "white", 50),
+                    u'Жигули 3% butilka black': Create("butilka", "black", 80),
+                    u'Жигули 3% butilka white': Create("butilka", "white", 90),
+                    u'Жигули 9% black': Create("banka", "black", 102),
+                    u'Жигули 9% white': Create("banka", "white", 30),
+                    u'Жигули 9% butilka black': Create("butilka", "black", 50),
+                    u'Жигули 9% butilka white': Create("butilka", "white", 20)},
                                              GotoQuestion("HowMany"), saveTo='item')}, "Usual")
 
 
@@ -197,3 +246,6 @@ def Print(All):
             print i + 1, x
     else:
         print u"Добавили товар", All[1][0], u"в количестве", All[1][1]
+
+
+Items = TItems([Beer])
