@@ -26,7 +26,7 @@ def cart_items():
 
     data['title'] = " ".join(words)
 
-    items = Item.objects(title=data['title'])
+    items = Item.objects(title=data['title'], cart_id=cart.id)
     if len(items) > 0:
         return json.dumps(items[0].as_api()), 200, {'Content-Type': 'application/json; charset=utf-8'}
 
