@@ -331,7 +331,7 @@ class TItemFromNet(TItem):
 
         targets = []
         for title in self.targets:
-            words = map(lambda x: morphy_word(word.lower()), re.findall(ur'(?u)\w+', title)[:2])
+            words = map(lambda x: morphy_word(title.lower()), re.findall(ur'(?u)\w+', title)[:2])
             targets += [words]
         self.targets = targets
 
