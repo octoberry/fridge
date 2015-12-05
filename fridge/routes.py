@@ -3,20 +3,32 @@ import json
 
 from bson import ObjectId
 from flask import request
-from fridge.app import app, cart
+from fridge.app import app
 from fridge.forms import ItemForm
-from fridge.models import Item, ItemController, ItemShopController
+from fridge.models import Item, ItemController, ItemShopController, Cart, CartController
 from fridge.telegram import Telegram
 from product.find import Items, GetQuery
 
 
 @app.route('/cart/items', methods=['POST'])
 def cart_items():
+    xchat_id = request.headers.get('X-Fridge-chat-id', None)
+    if xchat_id is None:
+        xchat_id = app.config['DEFAULT_ROOM']
+    cart = CartController.get_or_create(chat_id=xchat_id)
+
     data = json.loads(request.data)
+    words = Items.filterWords(data['title'])
+    if len(words) == 0:
+        return json.dumps({'error': 'can not add product'}), 400, {'Content-Type': 'application/json; charset=utf-8'}
+
+    data['title'] = " ".join(words)
     form = ItemForm.from_json(data)
     if form.validate():
         print 'creating product'
-        item = Item(**form.data)
+        data = form.data
+        data.update({'cart_id': cart.id})
+        item = Item(**data)
         item.save()
         return json.dumps(item.as_api()), 200, {'Content-Type': 'application/json; charset=utf-8'}
     else:
@@ -25,18 +37,20 @@ def cart_items():
 
 @app.route('/cart/items', methods=['GET'])
 def cart_items_list():
-    # shop = request.args.get('shop', None)
+    xview = request.headers.get('X-Fridge-view', None)
+    xchat_id = request.headers.get('X-Fridge-chat-id', None)
+    if xchat_id is None:
+        xchat_id = app.config['DEFAULT_ROOM']
+    cart = CartController.get_or_create(chat_id=xchat_id)
+    items = Item.objects(cart_id=cart.id)
+
     if cart.status == 'confirmed':
-        xview = request.headers.get('X-Fridge-view', None)
-        items = Item.objects
         if xview == 'ios':
             data = ItemShopController.items_as_ios(items)
         else:
             data = ItemShopController.items_as_dict(items)
         return json.dumps(data), 200, {'Content-Type': 'application/json; charset=utf-8'}
     else:
-        xview = request.headers.get('X-Fridge-view', None)
-        items = Item.objects
         if xview == 'ios':
             data = ItemController.items_as_ios(items)
         else:
@@ -110,11 +124,16 @@ def cart_item_list(item_id):
 
 @app.route('/query', methods=['GET'])
 def query():
+    xchat_id = request.headers.get('X-Fridge-chat-id', None)
+    if xchat_id is None:
+        xchat_id = app.config['DEFAULT_ROOM']
+    cart = CartController.get_or_create(chat_id=xchat_id)
+
     q = request.args.get('q', None)
     words = Items.filterWords(q)
     words = list(set(words))
     for w in words:
-        item = Item(title=w)
+        item = Item(title=w, cart_id=cart.id)
         item.save()
         Telegram.push(message=u"Добавил %s" % w)
     return json.dumps({}), 200, {'Content-Type': 'application/json; charset=utf-8'}
@@ -122,7 +141,14 @@ def query():
 
 @app.route('/cart', methods=['POST'])
 def cart_update():
+    xchat_id = request.headers.get('X-Fridge-chat-id', None)
+    if xchat_id is None:
+        xchat_id = app.config['DEFAULT_ROOM']
+    cart = CartController.get_or_create(chat_id=xchat_id)
+
     cart.status = 'confirmed'
-    Telegram.push(message=u"Корзина сформирована")
-    Telegram.push(message=u"Оплатите покупки")
+    cart.save()
+
+    Telegram.push(message=u"Корзина сформирована", chat_id=xchat_id)
+    Telegram.push(message=u"Оплатите покупки", chat_id=xchat_id)
     return json.dumps({}), 200, {'Content-Type': 'application/json; charset=utf-8'}

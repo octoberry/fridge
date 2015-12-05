@@ -2,3 +2,5 @@ DEBUG = True
 MONGO_HOST = 'localhost'
 MONGO_PORT = 27017
 MONGO_DBNAME = 'fridge'
+
+DEFAULT_ROOM = '-41300273'

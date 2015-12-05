@@ -1,7 +1,7 @@
 # coding=utf-8
 from collections import defaultdict
 
-from mongoengine import Document, StringField, FloatField, IntField
+from mongoengine import Document, StringField, FloatField, IntField, ObjectIdField
 
 
 class Item(Document):
@@ -10,6 +10,7 @@ class Item(Document):
     price = FloatField()
     count = IntField()
     magaz = StringField()
+    cart_id = ObjectIdField()
     state = StringField(default="{}")
 
     def __init__(self, *args, **values):
@@ -32,6 +33,23 @@ class Item(Document):
             'price': self.price,
             'count': self.count
         }
+
+
+class Cart(Document):
+    chat_id = StringField()
+    status = StringField()
+
+
+class CartController(object):
+    @staticmethod
+    def get_or_create(chat_id):
+        carts = Cart.objects(chat_id=chat_id)
+        if len(carts) == 0:
+            cart = Cart(chat_id=chat_id)
+            cart.save()
+        else:
+            cart = carts.first()
+        return cart
 
 
 class ItemController(object):

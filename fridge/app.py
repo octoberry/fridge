@@ -8,7 +8,7 @@ mongo = PyMongo(app)
 connect('fridge')
 
 
-class Cart(object):
-    status = 'new'
-
-cart = Cart()
+# class Cart(object):
+#     status = 'new'
+#
+# cart = Cart()
