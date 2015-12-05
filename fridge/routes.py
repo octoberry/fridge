@@ -172,7 +172,9 @@ def cart_delete():
         xchat_id = app.config['DEFAULT_ROOM']
     cart = CartController.get_or_create(chat_id=xchat_id)
 
-    Item.objects.get(cart_id=cart.id).delete()
+    items = Item.objects.get(cart_id=cart.id)
+    for item in items:
+        item.delete()
     cart.delete()
 
     Telegram.push(message=u"Корзина удалена", chat_id=xchat_id)
