@@ -131,7 +131,7 @@ class ItemShopController(object):
                         "price_list": price_list
                     })
         return {
-            "@tfype": "ProductListCardObject",
+            "@type": "ProductListCardObject",
             "id": "unique_id_1234",
             "type": "product_list_formed",
             "score": 100500,
