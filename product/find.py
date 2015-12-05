@@ -270,7 +270,7 @@ class TItemFromNet(TItem):
         self.head = self.data[0]
         self.data = self.data[1:]
         name2id = dict(map(lambda x: (x[1], x[0]), enumerate(self.head)))
-        bad_names = ['id', 'link']
+        bad_names = ['id', 'link',  "rec_name", "rec_price"]
         target = 'name'
         price = 'price'
         categories = []
