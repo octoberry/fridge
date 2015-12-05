@@ -251,12 +251,19 @@ class TItem(object):
 class TItemFromNet(TItem):
 
     def Match(self, query):
+        # count = 0
+        # if len(query) <= 2:
+        #     return 0
+        # for title in self.targets:
+        #     words = words = re.findall(ur'(?u)\w+', title)[:2]
+        #     count += any([morphy_word(query.lower()) == morphy_word(word.lower()) for word in words])
+        # return count
         count = 0
         if len(query) <= 2:
             return 0
-        for title in self.targets:
-            words = words = re.findall(ur'(?u)\w+', title)[:2]
-            count += any([morphy_word(query.lower()) == morphy_word(word.lower()) for word in words])
+        q = morphy_word(query.lower())
+        for words in self.targets:
+            count += any([q == word for word in words])
         return count
 
     def doFirst(self):
@@ -323,6 +330,12 @@ class TItemFromNet(TItem):
         self.urls = set([d[name2id['link']] for d in self.data if d[name2id[cat]] is not None])
         self.targets = set([d[name2id[target]] for d in self.data if d[name2id[target]] is not None])
 
+        targets = []
+        for title in self.targets:
+            words = map(lambda x: morphy_word(word.lower()), re.findall(ur'(?u)\w+', title)[:2])
+            targets += [words]
+        self.targets = targets
+
 
 class TItems(object):
 
@@ -370,7 +383,7 @@ class TItems(object):
             State['notExact'] = 1
             del State['notExact']
         else:
-            notExact = self.doNotExactSearch(word)
+            notExact = self.doNotExactSearch(morphy_word(word))
             if notExact is not None:
                 State['notExact'] = 1
                 State['Current'] = notExact
