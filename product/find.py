@@ -279,6 +279,12 @@ class TItemFromNet(TItem):
             self.targets = []
             return
 
+        categories = [cat for i, cat in enumerate(categories) if set([d[name2id[cat]] for d in self.data if d[name2id[cat]] is not None]) > 1]
+
+        if not len(categories):
+            self.targets = []
+            return
+
         first = categories[0]
 
         for i, cat in enumerate(categories):
