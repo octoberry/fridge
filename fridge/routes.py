@@ -23,6 +23,11 @@ def cart_items():
         return json.dumps({'error': 'can not add product'}), 400, {'Content-Type': 'application/json; charset=utf-8'}
 
     data['title'] = " ".join(words)
+
+    items = Item.objects(title=data['title'])
+    if len(items) > 0:
+        return json.dumps(items[0].as_api()), 200, {'Content-Type': 'application/json; charset=utf-8'}
+
     form = ItemForm.from_json(data)
     if form.validate():
         print 'creating product'
@@ -134,6 +139,11 @@ def query():
     words = Items.filterWords(q)
     words = list(set(words))
     for w in words:
+
+        items = Item.objects(title=w)
+        if len(items) > 0:
+            continue
+
         item = Item(title=w, cart_id=cart.id)
         item.save()
         Telegram.push(message=u"Добавил %s" % w, chat_id=xchat_id)
