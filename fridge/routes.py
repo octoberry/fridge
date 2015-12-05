@@ -44,18 +44,15 @@ def cart_items_list():
     cart = CartController.get_or_create(chat_id=xchat_id)
     items = Item.objects(cart_id=cart.id)
 
-    if cart.status == 'confirmed':
-        if xview == 'ios':
+    if xview == 'ios':
+        if cart.status == 'confirmed':
             data = ItemShopController.items_as_ios(items)
         else:
-            data = ItemShopController.items_as_dict(items)
-        return json.dumps(data), 200, {'Content-Type': 'application/json; charset=utf-8'}
-    else:
-        if xview == 'ios':
             data = ItemController.items_as_ios(items)
-        else:
-            data = ItemController.items_as_dict(items)
-        return json.dumps(data), 200, {'Content-Type': 'application/json; charset=utf-8'}
+    else:
+        data = ItemController.items_as_dict(items)
+
+    return json.dumps(data), 200, {'Content-Type': 'application/json; charset=utf-8'}
 
 
 @app.route('/cart/item/<string:item_id>', methods=['GET'])
