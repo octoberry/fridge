@@ -331,8 +331,11 @@ class TItemFromNet(TItem):
 
         targets = []
         for title in self.targets:
-            words = map(lambda x: morphy_word(title.lower()), re.findall(ur'(?u)\w+', title)[:2])
+            words = map(lambda x: morphy_word(x.lower()), re.findall(ur'(?u)\w+', title)[:2])
             targets += [words]
+            # if '66' in filename:
+            #     for t in words:
+            #         print t
         self.targets = targets
 
 
