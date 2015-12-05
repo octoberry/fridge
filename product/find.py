@@ -137,7 +137,8 @@ class QuesitonSelectFew(Question):
                 result.append(answer)
         result = sorted(result, key=lambda x: abs(self.Answers[x][self.Targets['sort']] -
             State.get('price', 0)) + 10000 * (x == u'Дальше'))
-        result = map(lambda x: x + u', цена: ' + str(self.Answers[x]['price']), result)
+        # result = map(lambda x: x + u', цена: ' + str(self.Answers[x]['price']), result)
+        result = map(lambda x: x, result)
         return result
 
     def Check(self, State):
