@@ -323,7 +323,7 @@ class TItemFromNet(TItem):
             for u in uniq_types:
                 answers[u] = GotoQuestion(NextQuestion, **{cat: u})
             answers[u'Дальше'] = GotoQuestion(NextQuestion)
-            item_params[cat] = Question(u"Выберете " + cat, answers)
+            item_params[cat] = Question(u"Выберите " + cat, answers)
 
         self.item = TItem(u"", item_params, first, 'SelectFew', 'ApproxPrice')
         self.urls = set([d[name2id['link']] for d in self.data if d[name2id[cat]] is not None])
