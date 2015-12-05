@@ -69,6 +69,10 @@ def cart_item_del(item_id):
 
 @app.route('/cart/item/<string:item_id>', methods=['POST'])
 def cart_item_update(item_id):
+    xchat_id = request.headers.get('X-Fridge-chat-id', None)
+    if xchat_id is None:
+        xchat_id = app.config['DEFAULT_ROOM']
+
     item = Item.objects.get(id=ObjectId(item_id))
     data = json.loads(request.data)
     form_data = item.to_form_data()
@@ -82,7 +86,7 @@ def cart_item_update(item_id):
         item.price = data['price']
         item.count = data['count']
         item.save()
-        Telegram.push(message=u"Список покупок уточнен, добавил %s" % item.shop_name)
+        Telegram.push(message=u"Список покупок уточнен, добавил %s" % item.shop_name, chat_id=xchat_id)
     else:
         print form.errors
     item = Item.objects.get(id=ObjectId(item_id))
@@ -132,7 +136,7 @@ def query():
     for w in words:
         item = Item(title=w, cart_id=cart.id)
         item.save()
-        Telegram.push(message=u"Добавил %s" % w)
+        Telegram.push(message=u"Добавил %s" % w, chat_id=xchat_id)
     return json.dumps({}), 200, {'Content-Type': 'application/json; charset=utf-8'}
 
 
