@@ -84,10 +84,11 @@ class Answer(object):
 
 class Question(object):
 
-    def __init__(self, Q, Answers, Any=DefaultAction()):
+    def __init__(self, Q, Answers, Any=DefaultAction(), Main=None):
         self.Q = Q
         self.Answers = Answers
         self.Any = Any or DefaultAction()
+        self.Main = Main
 
     def GetItems(self, State):
         items = self.Answers.keys()
@@ -515,9 +516,16 @@ ALCO = TItemFromNet(os.path.dirname(os.path.abspath(__file__)) + "/126")
 arr1 = [118, 119, 120, 121, 122, 123, 125, 126, 127, 128, 129, 130, 131, 132, 1692, 66, 69, 70, 903, 904, 906]
 
 arr2 = [1977, 20, 22, 23, 24, 25, 26, 28, 29, 3, 30, 31, 32, 33, 34, 35, 4, 42, 43, 44, 45, 46, 47,
+        1986,
         48, 49, 12, 39]
 
-arr = list(set(arr1 + arr2))
+arr3 = [100, 103, 104, 106, 107, 111, 113, 114, 116, 118, 119, 12, 120, 121, 122, 123, 125, 126,
+        127, 128, 129, 130, 131, 132, 1353, 1372, 1389, 1457, 1692, 19, 1977, 1986, 20, 2031, 22,
+        23, 24, 25, 26, 28, 29, 3, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 4, 42, 43, 44, 45, 46,
+        47, 48, 49, 5, 50, 51, 55, 56, 57, 58, 59, 62, 63, 64, 658, 66, 67, 69, 70, 71, 712, 74, 75,
+        754, 78, 79, 8, 80, 84, 85, 86, 87, 88, 89, 9, 90, 903, 904, 906, 91, 94, 954, 96, 97, 99]
+
+arr = list(set(arr1 + arr2 + arr3))
 
 LIST = map(lambda x: TItemFromNet(os.path.dirname(os.path.abspath(__file__)) + "/" + str(x)), arr)
 
