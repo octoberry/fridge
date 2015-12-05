@@ -108,7 +108,9 @@ def cart_item_define(item_id):
     item.state = json.dumps(s)
     f = False
     if q is None:
+        print "cart_item_define"
         print a
+        item.magaz = 'utkonos'
         item.shop_name = a[0]
         item.count = a[1]
         item.price = float(a[2])
