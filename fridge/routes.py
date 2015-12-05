@@ -175,7 +175,7 @@ def cart_delete():
     items = Item.objects(cart_id=cart.id)
     for item in items:
         item.delete()
-    cart.delete()
+    Cart.objects.get(chat_id=xchat_id).delete()
 
     Telegram.push(message=u"Корзина удалена", chat_id=xchat_id)
     return json.dumps({}), 200, {'Content-Type': 'application/json; charset=utf-8'}
