@@ -135,12 +135,16 @@ class QuesitonSelectFew(Question):
         for answer, values in self.Answers.iteritems():
             if all([State[k] == values[k] for k in self.Targets['select'] if k in State and k in values]):
                 result.append(answer)
-        result = sorted(result, key=lambda x: abs(self.Answers[x][self.Targets['sort']] - State['price']) + 10000 * (x == u'Дальше'))
+        result = sorted(result, key=lambda x: abs(self.Answers[x][self.Targets['sort']] -
+            State.get('price', 0)) + 10000 * (x == u'Дальше'))
         result = map(lambda x: x + u', цена: ' + str(self.Answers[x]['price']), result)
         return result
 
     def Check(self, State):
-        return len(self.getItems()) < 3
+        return len(self.getItems(State)) > 3
+
+    def Check2(self, State):
+        return self.getItems(State)
 
     def Ask(self, State):
         return self.Q, self.getItems(State)
@@ -224,12 +228,19 @@ class TItem(object):
             action.update(State)
         if 'end' in State and State['end']:
             return None, (State['item'], State.get('count', 1), State['price']), None
-        if self.CheckQuestion and self.CheckQuestion in self.Questions and not self.Questions[self.CheckQuestion].Check(State):
-            if self.GotoQuestion:
-                State['CurrentQuestion'] = self.GotoQuestion
-            else:
-                State['CurrentQuestion'] = self.CheckQuestion
-            State = s
+        if self.CheckQuestion and self.CheckQuestion in self.Questions:
+            print self.CheckQuestion
+            print len(self.Questions[self.CheckQuestion].Check2(State))
+            print self.Questions[self.CheckQuestion].Check2(State)
+            if not self.Questions[self.CheckQuestion].Check(State):
+                print self.GotoQuestion
+                State = s
+                if self.GotoQuestion:
+                    State['CurrentQuestion'] = self.GotoQuestion
+                else:
+                    State['CurrentQuestion'] = self.CheckQuestion
+                print s
+                print len(self.Questions[self.CheckQuestion].Check2(State))
         q, items = self.Questions[State['CurrentQuestion']].Ask(State)
         return q, items, State
 
@@ -273,7 +284,7 @@ class TItemFromNet(TItem):
             info['price'] = int(x)
             tovars[d[name2id[target]]] = info
 
-        categories = filter(lambda x: x != price, categories)
+        categories = filter(lambda x: x != price and x != u'Страна', categories)
 
         item_params = {'HowMany': QuestionCount(u"Сколько?", 'count', lambda x: AddItemWithCount(**x)),
                        'ApproxPrice': QuestionCount(u"Приблизительная цена?", 'price', lambda x: GotoQuestion('SelectFew', **x)),
@@ -305,7 +316,7 @@ class TItemFromNet(TItem):
             answers[u'Дальше'] = GotoQuestion(NextQuestion)
             item_params[cat] = Question(u"Выберете " + cat, answers)
 
-        self.item = TItem(u"", item_params, first, 'ApproxPrice', 'SelectFew')
+        self.item = TItem(u"", item_params, first, 'SelectFew', 'ApproxPrice')
         self.urls = set([d[name2id['link']] for d in self.data if d[name2id[cat]] is not None])
         self.targets = set([d[name2id[target]] for d in self.data if d[name2id[target]] is not None])
 
