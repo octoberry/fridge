@@ -152,6 +152,7 @@ def query():
 
 @app.route('/cart', methods=['POST'])
 def cart_update():
+    print request.headers
     xchat_id = request.headers.get('X-Fridge-chat-id', None)
     if xchat_id is None:
         xchat_id = app.config['DEFAULT_ROOM']
