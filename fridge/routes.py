@@ -155,6 +155,7 @@ def cart_update():
     xchat_id = request.headers.get('X-Fridge-chat-id', None)
     if xchat_id is None:
         xchat_id = app.config['DEFAULT_ROOM']
+    print xchat_id
     cart = CartController.get_or_create(chat_id=xchat_id)
 
     cart.status = 'confirmed'
