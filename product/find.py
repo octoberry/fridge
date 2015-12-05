@@ -237,7 +237,8 @@ class TItemFromNet(TItem):
         if len(query) <= 2:
             return 0
         for title in self.targets:
-            count += (query.lower() in title.lower())
+            words = words = re.findall(ur'(?u)\w+', title)[:2]
+            count += any([morphy_word(query.lower()) == morphy_word(word.lower()) for word in words])
         return count
 
     def doFirst(self):
@@ -279,7 +280,8 @@ class TItemFromNet(TItem):
             self.targets = []
             return
 
-        categories = [cat for i, cat in enumerate(categories) if set([d[name2id[cat]] for d in self.data if d[name2id[cat]] is not None]) > 1]
+        categories = [cat for i, cat in enumerate(categories) if len(set([d[name2id[cat]] for d in
+            self.data if d[name2id[cat]] is not None])) > 1]
 
         if not len(categories):
             self.targets = []
