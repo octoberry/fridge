@@ -112,7 +112,7 @@ def cart_item_define(item_id):
         item.shop_name = a[0]
         item.count = a[1]
         item.price = float(a[2])
-        item.magaz = a[3]
+        item.magaz = a[3] or 'utkonos'
         q = u"Принято!"
         a = []
         f = True
