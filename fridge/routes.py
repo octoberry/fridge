@@ -60,15 +60,23 @@ def cart_item_del(item_id):
 def cart_item_update(item_id):
     item = Item.objects.get(id=ObjectId(item_id))
     data = json.loads(request.data)
+    form_data = item.to_form_data()
+    for d in form_data:
+        if d not in data:
+            data.update({d: form_data[d]})
     form = ItemForm.from_json(data)
     if form.validate():
+        print item.count
+        print form.data
         item.title = form.data.title
         item.shop_name = form.data.shop_name
         item.price = form.data.price
         item.count = form.data.count
         item.save()
+        Telegram.push(message=u"Список покупок уточнен, добавил %s" % item.shop_name)
+    else:
+        print form.errors
     item = Item.objects.get(id=ObjectId(item_id))
-    Telegram.push(message=u"Список покупок уточнен, добавил %s" % item.shop_name)
     return json.dumps(item.as_api()), 200, {'Content-Type': 'application/json; charset=utf-8'}
 
 

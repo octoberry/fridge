@@ -25,6 +25,14 @@ class Item(Document):
             'count': self.count
         }
 
+    def to_form_data(self):
+        return {
+            'title': self.title,
+            'shop_name': self.shop_name,
+            'price': self.price,
+            'count': self.count
+        }
+
 
 class ItemController(object):
     @staticmethod
