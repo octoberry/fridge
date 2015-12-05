@@ -13,7 +13,7 @@ from product.find import Items, GetQuery
 @app.route('/cart/items', methods=['POST'])
 def cart_items():
     xchat_id = request.headers.get('X-Fridge-chat-id', None)
-    if xchat_id is None:
+    if xchat_id is None or xchat_id == {} or xchat_id == "{}":
         xchat_id = app.config['DEFAULT_ROOM']
     cart = CartController.get_or_create(chat_id=xchat_id)
 
@@ -44,7 +44,7 @@ def cart_items():
 def cart_items_list():
     xview = request.headers.get('X-Fridge-view', None)
     xchat_id = request.headers.get('X-Fridge-chat-id', None)
-    if xchat_id is None:
+    if xchat_id is None or xchat_id == {} or xchat_id == "{}":
         xchat_id = app.config['DEFAULT_ROOM']
     cart = CartController.get_or_create(chat_id=xchat_id)
     items = Item.objects(cart_id=cart.id)
@@ -75,7 +75,7 @@ def cart_item_del(item_id):
 @app.route('/cart/item/<string:item_id>', methods=['POST'])
 def cart_item_update(item_id):
     xchat_id = request.headers.get('X-Fridge-chat-id', None)
-    if xchat_id is None:
+    if xchat_id is None or xchat_id == {} or xchat_id == "{}":
         xchat_id = app.config['DEFAULT_ROOM']
 
     item = Item.objects.get(id=ObjectId(item_id))
@@ -131,7 +131,7 @@ def cart_item_list(item_id):
 @app.route('/query', methods=['GET'])
 def query():
     xchat_id = request.headers.get('X-Fridge-chat-id', None)
-    if xchat_id is None:
+    if xchat_id is None or xchat_id == {} or xchat_id == "{}":
         xchat_id = app.config['DEFAULT_ROOM']
     cart = CartController.get_or_create(chat_id=xchat_id)
 
