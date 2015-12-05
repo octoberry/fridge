@@ -90,6 +90,7 @@ def cart_item_update(item_id):
         item.shop_name = data['shop_name']
         item.price = data['price']
         item.count = data['count']
+        item.magaz = data['magaz']
         item.save()
         Telegram.push(message=u"Список покупок уточнен, добавил %s" % item.shop_name, chat_id=xchat_id)
     else:
