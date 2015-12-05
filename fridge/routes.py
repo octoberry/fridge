@@ -172,7 +172,7 @@ def cart_delete():
         xchat_id = app.config['DEFAULT_ROOM']
     cart = CartController.get_or_create(chat_id=xchat_id)
 
-    items = Item.objects.get(cart_id=cart.id)
+    items = Item.objects(cart_id=cart.id)
     for item in items:
         item.delete()
     cart.delete()
