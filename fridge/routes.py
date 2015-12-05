@@ -66,10 +66,10 @@ def cart_item_update(item_id):
             data.update({d: form_data[d]})
     form = ItemForm.from_json(data)
     if form.validate():
-        item.title = form_data.title
-        item.shop_name = form_data.shop_name
-        item.price = form_data.price
-        item.count = form_data.count
+        item.title = form_data['title']
+        item.shop_name = form_data['shop_name']
+        item.price = form_data['price']
+        item.count = form_data['count']
         item.save()
         Telegram.push(message=u"Список покупок уточнен, добавил %s" % item.shop_name)
     else:
