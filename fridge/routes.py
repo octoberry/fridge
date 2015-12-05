@@ -163,3 +163,17 @@ def cart_update():
     Telegram.push(message=u"Корзина сформирована", chat_id=xchat_id)
     Telegram.push(message=u"Оплатите покупки", chat_id=xchat_id)
     return json.dumps({}), 200, {'Content-Type': 'application/json; charset=utf-8'}
+
+
+@app.route('/cart', methods=['DELETE'])
+def cart_delete():
+    xchat_id = request.headers.get('X-Fridge-chat-id', None)
+    if xchat_id is None or xchat_id == {} or xchat_id == "{}":
+        xchat_id = app.config['DEFAULT_ROOM']
+    cart = CartController.get_or_create(chat_id=xchat_id)
+
+    Item.objects.get(cart_id=cart.id).delete()
+    cart.delete()
+
+    Telegram.push(message=u"Корзина удалена", chat_id=xchat_id)
+    return json.dumps({}), 200, {'Content-Type': 'application/json; charset=utf-8'}
