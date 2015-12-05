@@ -153,10 +153,8 @@ def query():
 @app.route('/cart', methods=['POST'])
 def cart_update():
     xchat_id = request.headers.get('X-Fridge-chat-id', None)
-    print xchat_id
-    if xchat_id is None or xchat_id == {}:
+    if xchat_id is None or xchat_id == {} or xchat_id == "{}":
         xchat_id = app.config['DEFAULT_ROOM']
-    print xchat_id
     cart = CartController.get_or_create(chat_id=xchat_id)
 
     cart.status = 'confirmed'
