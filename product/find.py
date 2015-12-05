@@ -111,7 +111,7 @@ class Question(object):
             try:
                 digit = int(answer)
             except Exception:
-                pass
+                digit = -1
             if digit == -1:
                 return self.Any
             if digit <= len(self.Answers) and digit > 0:
@@ -121,7 +121,6 @@ class Question(object):
 
 
 class QuesitonSelectFew(Question):
-
     def __init__(self, Q, Targets, Answers, FuncAction, Any=None, saveTo='item'):
         self.Q = Q
         self.Answers = Answers
@@ -135,12 +134,17 @@ class QuesitonSelectFew(Question):
         for answer, values in self.Answers.iteritems():
             if all([State[k] == values[k] for k in self.Targets['select'] if k in State and k in values]):
                 result.append(answer)
-        result = sorted(result, key=lambda x: abs(self.Answers[x][self.Targets['sort']] - State['price']) + 10000 * (x == u'Дальше'))
-        result = map(lambda x: x + u', цена: ' + str(self.Answers[x]['price']), result)
+        result = sorted(result, key=lambda x: abs(self.Answers[x][self.Targets['sort']] -
+            State.get('price', 0)) + 10000 * (x == u'Дальше'))
+        # result = map(lambda x: x + u', цена: ' + str(self.Answers[x]['price']), result)
+        result = map(lambda x: x, result)
         return result
 
     def Check(self, State):
-        return len(self.getItems()) < 3
+        return len(self.getItems(State))
+
+    def Check2(self, State):
+        return self.getItems(State)
 
     def Ask(self, State):
         return self.Q, self.getItems(State)
@@ -224,12 +228,21 @@ class TItem(object):
             action.update(State)
         if 'end' in State and State['end']:
             return None, (State['item'], State.get('count', 1), State['price']), None
-        if self.CheckQuestion and self.CheckQuestion in self.Questions and not self.Questions[self.CheckQuestion].Check(State):
-            if self.GotoQuestion:
-                State['CurrentQuestion'] = self.GotoQuestion
-            else:
-                State['CurrentQuestion'] = self.CheckQuestion
-            State = s
+        if self.CheckQuestion and self.CheckQuestion in self.Questions:
+            print self.CheckQuestion
+            print len(self.Questions[self.CheckQuestion].Check2(State))
+            print self.Questions[self.CheckQuestion].Check2(State)
+            c = self.Questions[self.CheckQuestion].Check(State)
+            if c < 5:
+                print self.GotoQuestion
+                if c == 0:
+                    State = s
+                if self.GotoQuestion and c > 1:
+                    State['CurrentQuestion'] = self.GotoQuestion
+                else:
+                    State['CurrentQuestion'] = self.CheckQuestion
+                print s
+                print len(self.Questions[self.CheckQuestion].Check2(State))
         q, items = self.Questions[State['CurrentQuestion']].Ask(State)
         return q, items, State
 
@@ -237,12 +250,19 @@ class TItem(object):
 class TItemFromNet(TItem):
 
     def Match(self, query):
+        # count = 0
+        # if len(query) <= 2:
+        #     return 0
+        # for title in self.targets:
+        #     words = words = re.findall(ur'(?u)\w+', title)[:2]
+        #     count += any([morphy_word(query.lower()) == morphy_word(word.lower()) for word in words])
+        # return count
         count = 0
         if len(query) <= 2:
             return 0
-        for title in self.targets:
-            words = words = re.findall(ur'(?u)\w+', title)[:2]
-            count += any([morphy_word(query.lower()) == morphy_word(word.lower()) for word in words])
+        q = morphy_word(query.lower())
+        for words in self.targets:
+            count += any([q == word for word in words])
         return count
 
     def doFirst(self):
@@ -256,7 +276,7 @@ class TItemFromNet(TItem):
         self.head = self.data[0]
         self.data = self.data[1:]
         name2id = dict(map(lambda x: (x[1], x[0]), enumerate(self.head)))
-        bad_names = ['id', 'link']
+        bad_names = ['id', 'link',  "rec_name", "rec_price"]
         target = 'name'
         price = 'price'
         categories = []
@@ -273,7 +293,7 @@ class TItemFromNet(TItem):
             info['price'] = int(x)
             tovars[d[name2id[target]]] = info
 
-        categories = filter(lambda x: x != price, categories)
+        categories = filter(lambda x: x != price and x != u'Страна', categories)
 
         item_params = {'HowMany': QuestionCount(u"Сколько?", 'count', lambda x: AddItemWithCount(**x)),
                        'ApproxPrice': QuestionCount(u"Приблизительная цена?", 'price', lambda x: GotoQuestion('SelectFew', **x)),
@@ -305,9 +325,18 @@ class TItemFromNet(TItem):
             answers[u'Дальше'] = GotoQuestion(NextQuestion)
             item_params[cat] = Question(u"Выберете " + cat, answers)
 
-        self.item = TItem(u"", item_params, first, 'ApproxPrice', 'SelectFew')
+        self.item = TItem(u"", item_params, first, 'SelectFew', 'ApproxPrice')
         self.urls = set([d[name2id['link']] for d in self.data if d[name2id[cat]] is not None])
         self.targets = set([d[name2id[target]] for d in self.data if d[name2id[target]] is not None])
+
+        targets = []
+        for title in self.targets:
+            words = map(lambda x: morphy_word(x.lower()), re.findall(ur'(?u)\w+', title)[:2])
+            targets += [words]
+            # if '66' in filename:
+            #     for t in words:
+            #         print t
+        self.targets = targets
 
 
 class TItems(object):
@@ -356,7 +385,7 @@ class TItems(object):
             State['notExact'] = 1
             del State['notExact']
         else:
-            notExact = self.doNotExactSearch(word)
+            notExact = self.doNotExactSearch(morphy_word(word))
             if notExact is not None:
                 State['notExact'] = 1
                 State['Current'] = notExact
