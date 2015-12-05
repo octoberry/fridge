@@ -89,9 +89,9 @@ class Question(object):
 
     def GetItems(self, State):
         items = self.Answers.keys()
-        if 'Дальше' in items:
-            items = filter(lambda x: x != 'Дальше', items)
-            items.append('Дальше')
+        if u'Дальше' in items:
+            items = filter(lambda x: x != u'Дальше', items)
+            items.append(u'Дальше')
         return items
 
     def Check(self, State):
@@ -509,8 +509,8 @@ def GetMilkList():
 
 
 def GetBeerList():
-    return [build('Жигули 3% 0.5л', 80, "utkonos"), build('Балтика 3% 0.5л', 30, "utkonos"),
-            build('Hougarden 3% 0.5л', 70, "azbuka")]
+    return [build(u'Жигули 3% 0.5л', 80, "utkonos"), build(u'Балтика 3% 0.5л', 30, "utkonos"),
+            build(u'Hougarden 3% 0.5л', 70, "azbuka")]
 
 
 def GetQuery(query):
