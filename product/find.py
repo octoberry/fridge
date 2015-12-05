@@ -111,7 +111,7 @@ class Question(object):
             try:
                 digit = int(answer)
             except Exception:
-                pass
+                digit = -1
             if digit == -1:
                 return self.Any
             if digit <= len(self.Answers) and digit > 0:
@@ -121,7 +121,6 @@ class Question(object):
 
 
 class QuesitonSelectFew(Question):
-
     def __init__(self, Q, Targets, Answers, FuncAction, Any=None, saveTo='item'):
         self.Q = Q
         self.Answers = Answers
