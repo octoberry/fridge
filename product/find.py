@@ -141,7 +141,7 @@ class QuesitonSelectFew(Question):
         return result
 
     def Check(self, State):
-        return len(self.getItems(State)) > 3
+        return len(self.getItems(State))
 
     def Check2(self, State):
         return self.getItems(State)
@@ -232,10 +232,12 @@ class TItem(object):
             print self.CheckQuestion
             print len(self.Questions[self.CheckQuestion].Check2(State))
             print self.Questions[self.CheckQuestion].Check2(State)
-            if not self.Questions[self.CheckQuestion].Check(State):
+            c = self.Questions[self.CheckQuestion].Check(State):
+            if c < 5:
                 print self.GotoQuestion
-                State = s
-                if self.GotoQuestion:
+                if c == 0:
+                    State = s
+                if self.GotoQuestion and c > 1:
                     State['CurrentQuestion'] = self.GotoQuestion
                 else:
                     State['CurrentQuestion'] = self.CheckQuestion
