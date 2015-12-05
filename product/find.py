@@ -233,7 +233,7 @@ class TItem(object):
             print self.CheckQuestion
             print len(self.Questions[self.CheckQuestion].Check2(State))
             print self.Questions[self.CheckQuestion].Check2(State)
-            c = self.Questions[self.CheckQuestion].Check(State):
+            c = self.Questions[self.CheckQuestion].Check(State)
             if c < 5:
                 print self.GotoQuestion
                 if c == 0:
