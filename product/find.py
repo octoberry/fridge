@@ -3,6 +3,8 @@ import os
 import re
 import json
 
+from copy import deepcopy
+
 import urllib2
 
 import pymorphy2
@@ -138,7 +140,7 @@ class QuesitonSelectFew(Question):
         return result
 
     def Check(self, State):
-        return len(self.getItems()) < 5
+        return len(self.getItems()) < 3
 
     def Ask(self, State):
         return self.Q, self.getItems(State)
@@ -216,6 +218,7 @@ class TItem(object):
         return q, items, State
 
     def do(self, answer, State):
+        s = deepcopy(State)
         action = self.Questions[State['CurrentQuestion']].WhatNext(answer, State)
         if action:
             action.update(State)
@@ -226,6 +229,7 @@ class TItem(object):
                 State['CurrentQuestion'] = self.GotoQuestion
             else:
                 State['CurrentQuestion'] = self.CheckQuestion
+            State = s
         q, items = self.Questions[State['CurrentQuestion']].Ask(State)
         return q, items, State
 
