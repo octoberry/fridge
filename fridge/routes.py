@@ -142,6 +142,8 @@ def query():
     words = Items.filterWords(q)
     words = list(set(words))
     for w in words:
+        print '!!!!'
+        print w
 
         items = Item.objects(title=w)
         if len(items) > 0:
