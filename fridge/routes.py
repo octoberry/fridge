@@ -142,10 +142,9 @@ def query():
     words = Items.filterWords(q)
     words = list(set(words))
     for w in words:
-        print '!!!!'
-        # items = Item.objects(title=w)
-        # if len(items) > 0:
-        #     continue
+        items = Item.objects(title=w, cart_id=cart.id)
+        if len(items) > 0:
+            continue
 
         item = Item(title=w, cart_id=cart.id)
         item.save()
