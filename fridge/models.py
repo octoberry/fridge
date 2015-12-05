@@ -4,6 +4,12 @@ from collections import defaultdict
 from mongoengine import Document, StringField, FloatField, IntField, ObjectIdField
 
 
+shop_title = {
+    'azbuka': u'Азбука вкуса',
+    'utkonos': u'Утконос',
+}
+
+
 class Item(Document):
     title = StringField(required=True)
     shop_name = StringField()
@@ -127,7 +133,7 @@ class ItemShopController(object):
                     })
                 storeItems.append({
                         "storeId": shop,
-                        "storeName": shop,
+                        "storeName": shop_title.get(shop, u'Магазин'),
                         "price_list": price_list
                     })
         return {
